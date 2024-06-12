@@ -1,7 +1,11 @@
-﻿namespace Tickets_selling_App.Models
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace Tickets_selling_App.Models
 {
     public class Customer
     {
+        [Key]
         public int ID { get; set; }
         public string Name { get; set; }
         public string LastName { get; set; }
