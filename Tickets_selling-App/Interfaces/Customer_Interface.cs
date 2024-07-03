@@ -4,7 +4,7 @@ namespace Tickets_selling_App.Interfaces
 {
     public interface Customer_Interface
     {
-        void Registration (Customer customer);
-        ICollection<Customer> AllCustomers();
+        void Registration (User customer);
+        ICollection<User> AllCustomers();
     }
 }

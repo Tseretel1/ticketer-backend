@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.Internal;
+using System.Runtime.CompilerServices;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 
@@ -16,7 +17,6 @@ namespace Tickets_selling_App.Controllers
             _context = context;
             _admin = admin;
         }
-
         [HttpPost("/Add New Tickets")]
         public IActionResult AddTicket(Ticket ticket)
         {
@@ -46,7 +46,7 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong {ex.Message}");
             }
         }
-        [HttpDelete]
+        [HttpDelete("/Delete Tickets")]
         public IActionResult Delete_Ticket(int ID)
         {
             try

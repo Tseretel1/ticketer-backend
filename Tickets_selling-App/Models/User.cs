@@ -3,9 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Tickets_selling_App.Models
 {
-    public class Customer
+    public class User
     {
-        [Key]
         public int ID { get; set; }
         public string Name { get; set; }
         public string LastName { get; set; }
