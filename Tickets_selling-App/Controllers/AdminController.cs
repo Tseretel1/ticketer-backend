@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Runtime.CompilerServices;
+using Tickets_selling_App.Dtos;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 
@@ -18,19 +19,19 @@ namespace Tickets_selling_App.Controllers
             _admin = admin;
         }
         [HttpPost("/Add New Tickets")]
-        public IActionResult AddTicket(Ticket ticket)
+        public IActionResult AddTicket(TicketDto ticket)
         {
             try
             {
-                _admin.AddTicket(ticket);
-                return Ok("Ticket has been Added");
+                string Response = _admin.AddTicket(ticket);
+                return Ok($"{Response}");
             }
             catch (Exception ex)
             {
                 return BadRequest("Something went wrong");
             }
         }
-        [HttpGet("/ See Al Tickets")]
+        [HttpGet("/See Al Tickets")]
         public IActionResult GetAlltickets()
         {
             try
@@ -46,12 +47,28 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong {ex.Message}");
             }
         }
-        [HttpDelete("/Delete Tickets")]
-        public IActionResult Delete_Ticket(int ID)
+        [HttpGet("/See Tickets")]
+        public IActionResult Tickets()
         {
             try
             {
-                _admin.DeleteTicket(ID);
+                var Tickets = _admin.See_Tickets();
+
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Ticket not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+        [HttpDelete("/Delete Tickets")]
+        public IActionResult Delete_Ticket(string type)
+        {
+            try
+            {
+                _admin.DeleteTicket(type);
                 return Ok("Ticket Successfully Deleted!");
             }
             catch

@@ -9,7 +9,7 @@ namespace Tickets_selling_App
         {
 
         }
-        public DbSet<User> Customer { get; set; }
+        public DbSet<User> User { get; set; }
         public DbSet<Ticket> Ticket { get; set; }
     }
 }

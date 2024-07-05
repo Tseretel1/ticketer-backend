@@ -10,7 +10,7 @@ namespace Tickets_selling_App.Services
 {
     public class GmailService : Gmail_Interface
     {
-        public async Task SendEmailAsync(string email, string subject, string message, string qrCodeData)
+        public async Task SendEmailAsync(string email,string qrCodeData)
         {
             try
             {
@@ -22,18 +22,15 @@ namespace Tickets_selling_App.Services
 
                 var fromAddress = new MailAddress("mailtrap@demomailtrap.com", "Ticket");
                 var toAddress = new MailAddress(email);
-
+                string message = "You Successfully bought ticket!";
+                string subject = "You Bought Ticket";
                 var mailMessage = new MailMessage(fromAddress, toAddress)
                 {
                     Subject = subject,
                     Body = message,
                     IsBodyHtml = false,
                 };
-
-                // Generate QR code image bytes
                 byte[] qrCodeBytes = QrGenerator(qrCodeData);
-
-                // Attach QR code image to the email
                 using (var qrStream = new MemoryStream(qrCodeBytes))
                 {
                     mailMessage.Attachments.Add(new Attachment(qrStream, "qrcode.png", "image/png"));
@@ -55,7 +52,7 @@ namespace Tickets_selling_App.Services
             using (QRCodeData qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q))
             using (PngByteQRCode qrCode = new PngByteQRCode(qrCodeData))
             {
-                return qrCode.GetGraphic(20); // 20 is pixel size
+                return qrCode.GetGraphic(50);
             }
         }
     }
