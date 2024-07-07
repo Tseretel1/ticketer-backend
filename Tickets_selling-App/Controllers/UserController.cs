@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -51,7 +52,7 @@ namespace Tickets_selling_App.Controllers
                 {
                     _User.Registration(UserDTO);
                 }
-                return Ok("registration Successfull");
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -73,6 +74,19 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest("Email or Password is incorrect!");
             }
         }
+        [HttpPost("/reset password")]
+        public async Task<ActionResult> Reset_Password(string Mail)
+        {
+            string Response = _User.Password_Restoration(Mail);
+            return Ok(Response);
+        }
+        [HttpPost("/Change password")]
+        public async Task<ActionResult> Change_Password(string Mail,string password,int passcode)
+        {
+            string Response = _User.Changing_Password(Mail, password, passcode);
+            return Ok(Response);
+        }
+
 
         [HttpGet("/Get Users")]
         public IActionResult AllUsers ()

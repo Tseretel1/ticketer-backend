@@ -5,12 +5,13 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using QRCoder;
 using Tickets_selling_App.Interfaces;
+using static QRCoder.PayloadGenerator;
 
 namespace Tickets_selling_App.Services
 {
     public class GmailService : Gmail_Interface
     {
-        public async Task SendEmailAsync(string email,string qrCodeData)
+        public async Task SendEmailAsync(string email, string qrCodeData)
         {
             try
             {
@@ -20,7 +21,7 @@ namespace Tickets_selling_App.Services
                     EnableSsl = true
                 };
 
-                var fromAddress = new MailAddress("mailtrap@demomailtrap.com", "Ticket");
+                var fromAddress = new MailAddress("mailtrap@demomailtrap.com", "Ticket.ge");
                 var toAddress = new MailAddress(email);
                 string message = "You Successfully bought ticket!";
                 string subject = "You Bought Ticket";
@@ -36,12 +37,9 @@ namespace Tickets_selling_App.Services
                     mailMessage.Attachments.Add(new Attachment(qrStream, "qrcode.png", "image/png"));
                     await client.SendMailAsync(mailMessage);
                 }
-
-                Console.WriteLine("Email sent successfully.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in SendEmailAsync: {ex.Message}");
                 throw;
             }
         }
@@ -53,6 +51,33 @@ namespace Tickets_selling_App.Services
             using (PngByteQRCode qrCode = new PngByteQRCode(qrCodeData))
             {
                 return qrCode.GetGraphic(50);
+            }
+        }
+
+        public async Task Password_Restoration(string mail, int Passcode)
+        {
+            try
+            {
+                var client = new SmtpClient("live.smtp.mailtrap.io", 587)
+                {
+                    Credentials = new NetworkCredential("api", "c0a4651a8cd800b259893fd94e8d1856"),
+                    EnableSsl = true
+                };
+                var fromAddress = new MailAddress("mailtrap@demomailtrap.com", "Ticket.ge");
+                var toAddress = new MailAddress(mail);
+                string message = $"{Passcode}";
+                string subject = "Your Passcode";
+                var mailMessage = new MailMessage(fromAddress, toAddress)
+                {
+                    Subject = subject,
+                    Body = message,
+                    IsBodyHtml = false,
+                };
+                await client.SendMailAsync(mailMessage);
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }

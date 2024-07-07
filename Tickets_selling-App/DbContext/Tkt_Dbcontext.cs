@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Tickets_selling_App.Migrations;
 using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App
@@ -11,5 +12,9 @@ namespace Tickets_selling_App
         }
         public DbSet<User> User { get; set; }
         public DbSet<Ticket> Ticket { get; set; }
+        public DbSet<PasswordReset> PasswordReset { get; set; }
+        public DbSet<SoldTIckets> SoldTIckets { get; set; }
+
     }
+
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tickets_selling_App;
 
@@ -11,9 +12,11 @@ using Tickets_selling_App;
 namespace Tickets_selling_App.Migrations
 {
     [DbContext(typeof(Tkt_Dbcontext))]
-    partial class Tkt_DbcontextModelSnapshot : ModelSnapshot
+    [Migration("20240707123624_Password reset table")]
+    partial class Passwordresettable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,33 +47,6 @@ namespace Tickets_selling_App.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("PasswordReset");
-                });
-
-            modelBuilder.Entity("Tickets_selling_App.Models.SoldTIckets", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<string>("TicketID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TicketID1")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Userid")
-                        .HasColumnType("int");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("TicketID1");
-
-                    b.HasIndex("Userid");
-
-                    b.ToTable("SoldTIckets");
                 });
 
             modelBuilder.Entity("Tickets_selling_App.Models.Ticket", b =>
@@ -160,35 +136,9 @@ namespace Tickets_selling_App.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Tickets_selling_App.Models.SoldTIckets", b =>
-                {
-                    b.HasOne("Tickets_selling_App.Models.Ticket", "Ticket")
-                        .WithMany("Sold_tickets")
-                        .HasForeignKey("TicketID1")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Tickets_selling_App.Models.User", "user")
-                        .WithMany("Sold_tickets")
-                        .HasForeignKey("Userid")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("user");
-                });
-
-            modelBuilder.Entity("Tickets_selling_App.Models.Ticket", b =>
-                {
-                    b.Navigation("Sold_tickets");
-                });
-
             modelBuilder.Entity("Tickets_selling_App.Models.User", b =>
                 {
                     b.Navigation("PasswordReset");
-
-                    b.Navigation("Sold_tickets");
                 });
 #pragma warning restore 612, 618
         }

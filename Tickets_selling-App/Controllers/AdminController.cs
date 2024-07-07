@@ -31,7 +31,7 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest("Something went wrong");
             }
         }
-        [HttpGet("/See Al Tickets")]
+        [HttpGet("/See All Tickets")]
         public IActionResult GetAlltickets()
         {
             try
