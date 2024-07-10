@@ -14,7 +14,7 @@ namespace Tickets_selling_App
         public DbSet<Ticket> Ticket { get; set; }
         public DbSet<PasswordReset> PasswordReset { get; set; }
         public DbSet<SoldTIckets> SoldTIckets { get; set; }
-
+        public DbSet<Email_Validation> Emailvalidation { get; set; }
     }
 
 }

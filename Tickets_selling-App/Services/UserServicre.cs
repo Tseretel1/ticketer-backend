@@ -1,16 +1,12 @@
 ﻿using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
-using BCrypt.Net;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Tickets_selling_App.Dtos;
-using System;
-using Microsoft.AspNetCore.Identity;
+using Azure;
+using Microsoft.EntityFrameworkCore;
 
 namespace Tickets_selling_App.Services
 {
@@ -25,23 +21,89 @@ namespace Tickets_selling_App.Services
             _configuration = configuration;
             _gmail = gmail;
         }
-        public void Registration(User customer)
+        public string Registration_Validation(string Email)
         {
-            if (customer != null)
+            string response = "";
+            bool CheckEmail = _context.User.Any(x => x.Email == Email);
+            if (Email != null)
             {
-                var hashed = HashPassword(customer.Password);
-                var Register_customer = new User
+                if (CheckEmail)
                 {
-                    Email = customer.Email,
-                    LastName = customer.LastName,
-                    Name = customer.Name,
-                    Password = hashed,
-                    Phone = customer.Phone,
-                    Profile_Picture = customer.Profile_Picture,
-                };
-                _context.User.Add(Register_customer);
-                _context.SaveChanges();
-            } 
+                    response = "An account has already been created using this email address. Please log in to your account or register with a different email <3 .";
+                }
+                else
+                {   
+                    Random random = new Random();
+                    int passcode = random.Next(100000, 999999);
+
+                    var NewEmailOrNot = _context.Emailvalidation.FirstOrDefault(x=>x.Email == Email);
+                    if (NewEmailOrNot != null)
+                    {
+                        NewEmailOrNot.Passcode = passcode;
+                        NewEmailOrNot.Expiration = DateTime.Now.AddMinutes(2);
+                        _context.SaveChanges();
+                    }
+                    else
+                    {
+                        var ValidateEmail = new Email_Validation
+                        {
+                            Email = Email,
+                            Passcode = passcode,
+                            Expiration = DateTime.Now.AddMinutes(2),
+                        };
+                            _context.Emailvalidation.Add(ValidateEmail);
+                            _context.SaveChanges();
+                    }
+                    _gmail.Email_Validation(Email, passcode);
+                    response = "We have sent you 6 digits passcode to your email address, please enter below to finish registration!";
+                }
+            }
+            return response;
+        }
+
+        public string Registration(User user, int passcode)
+        {               
+            string response = "";
+            try
+            {
+                var CheckEmail = _context.Emailvalidation.FirstOrDefault(x=>x.Email == user.Email && x.Passcode == passcode);
+                if (CheckEmail != null)
+                {
+                    if (CheckEmail.Expiration > DateTime.Now)
+                    {
+                        if (user != null)
+                        {
+                            response = $"{user.Name} You successfully registered to our app!";
+                            var hashed = HashPassword(user.Password);
+                            var Register_customer = new User
+                            {
+                                Email = user.Email,
+                                LastName = user.LastName,
+                                Name = user.Name,
+                                Password = hashed,
+                                Phone = user.Phone,
+                                Profile_Picture = null,
+                            };
+                            _context.User.Add(Register_customer);
+                            _context.Emailvalidation.Remove(CheckEmail);
+                            _context.SaveChanges();
+                        }
+                    }
+                    else
+                    {
+                        response = "Passcode expired please try again";
+                    }
+                }
+                else
+                {
+                    response = "Passcode is incorrect please try sending it again!";
+                }
+            }
+            catch(Exception ex)
+            {
+                return (ex.Message); 
+            }
+            return response;
         }
         public string HashPassword(string password)
         {
@@ -174,27 +236,34 @@ namespace Tickets_selling_App.Services
         public string Changing_Password(string mail, string password, int passcode)
         {
             string response = "";
+           
             var user = _context.User.FirstOrDefault(x=> x.Email == mail);
-            var Password_To_Reset = _context.PasswordReset.FirstOrDefault(x => x.ID == user.ID);
-            if (Password_To_Reset != null && Password_To_Reset.Expiration >= DateTime.Now)
+            if (user != null)
             {
-                if (passcode == Password_To_Reset.Passcode)
+                var PassCode_Compare = _context.PasswordReset.FirstOrDefault(x => x.ID == user.ID);
+                if (PassCode_Compare != null && PassCode_Compare.Expiration >= DateTime.Now)
                 {
-                    user.Password = password;
-                    _context.SaveChanges();
-                    response = $"Your Password has changed to {password}";
+                    if (passcode == PassCode_Compare.Passcode)
+                    {
+                        user.Password = password;
+                        PassCode_Compare.Expiration = DateTime.Now;
+                        _context.SaveChanges();   
+                        response = $"Your Password has changed to {password}";
+                    }
+                    else
+                    {
+                        response = "Passcode is incorrect";
+                    }
                 }
                 else
                 {
-                    response = "Passcode is incorrect";
+                    response = "Passcode expired try again";
                 }
-            }  
+            }
             else
             {
-                response = "Could not find mail";
+                response = "Could Not find Mail";
             }
-
-
             return response;
         }
     }

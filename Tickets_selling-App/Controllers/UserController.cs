@@ -1,14 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Json;
+﻿using Azure;
+using Microsoft.AspNetCore.Mvc;
 using Tickets_selling_App.Dtos;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
+using Tickets_selling_App.User_Side_Response;
 
 namespace Tickets_selling_App.Controllers
 {
@@ -18,47 +13,63 @@ namespace Tickets_selling_App.Controllers
     public class UserController : Controller
     {
         private readonly User_Interface _User;
-        private readonly Gmail_Interface _Mail;
         private readonly IConfiguration _Configuration;
-        public UserController(User_Interface customer, Gmail_Interface gmail, IConfiguration configuration)
+        public UserController(User_Interface customer, IConfiguration configuration)
         {
             _User = customer;
-            _Mail = gmail;
             _Configuration = configuration;
         }
-        [HttpGet("/SendEmails")]
-        public async Task<IActionResult> SendingEmails(string Mail)
+
+        [HttpPost("/Registration Validation")]
+        public async Task<IActionResult> Registration_Validations(string Email)
         {
             try
             {
-                string QrData = Mail;
-                await _Mail.SendEmailAsync(Mail, QrData);
-
-                return Ok("Successful");
+                if (User != null)
+                {
+                    string response = _User.Registration_Validation(Email);
+                    var NewMessage = new Client_Response
+                    {
+                        Message = response,
+                    };
+                    return Ok(NewMessage);
+                }
+                else
+                {
+                    return BadRequest("User is null");
+                }
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong: " + ex.Message);
+                return BadRequest($"Something went wrong: {ex.Message}");
             }
         }
-
 
         [HttpPost("/Registration")]
-        public async Task <IActionResult> Registration(User UserDTO)
+        public async Task<IActionResult> Registration(User user ,int passcode)
         {
             try
             {
-                if (UserDTO != null)
+                if (User != null)
                 {
-                    _User.Registration(UserDTO);
+                    string response = _User.Registration(user,passcode);
+                    var NewMessage = new Client_Response
+                    {
+                        Message = response,
+                    };
+                    return Ok(NewMessage);
                 }
-                return Ok();
+                else
+                {
+                    return BadRequest("User is null");
+                }
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong");
+                return BadRequest($"Something went wrong: {ex.Message}");
             }
         }
+
 
         [HttpPost("/Login")]
         public async Task<ActionResult<string>> Login([FromBody] UserDto model)
