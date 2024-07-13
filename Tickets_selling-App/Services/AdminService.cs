@@ -8,14 +8,14 @@ namespace Tickets_selling_App.Services
     public class AdminService : Admin_Interface
     {
         private readonly Tkt_Dbcontext _context;
-        
+
         public AdminService(Tkt_Dbcontext context)
         {
             _context = context;
         }
         public string AddTicket(TicketDto ticket)
         {
-           string Response = "";
+            string Response = "";
             try
             {
                 if (ticket != null && ticket.Activation_Date < ticket.Expiration_Date)
@@ -42,12 +42,12 @@ namespace Tickets_selling_App.Services
             }
             catch (Exception ex)
             {
-                Response = ex.Message;   
+                Response = ex.Message;
             }
             return Response;
         }
 
-        public void DeleteTicket (string Type)
+        public void DeleteTicket(string Type)
         {
             if (Type != null)
             {

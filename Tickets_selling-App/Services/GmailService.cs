@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Mail;
+using Microsoft.EntityFrameworkCore;
 using QRCoder;
 using Tickets_selling_App.Interfaces;
 using static QRCoder.PayloadGenerator;

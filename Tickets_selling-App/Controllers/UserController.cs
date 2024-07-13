@@ -13,78 +13,11 @@ namespace Tickets_selling_App.Controllers
     public class UserController : Controller
     {
         private readonly User_Interface _User;
-        private readonly IConfiguration _Configuration;
-        public UserController(User_Interface customer, IConfiguration configuration)
-        {
+        public UserController(User_Interface customer)
+        { 
             _User = customer;
-            _Configuration = configuration;
         }
 
-        [HttpPost("/Registration Validation")]
-        public async Task<IActionResult> Registration_Validations(string Email)
-        {
-            try
-            {
-                if (User != null)
-                {
-                    string response = _User.Registration_Validation(Email);
-                    var NewMessage = new Client_Response
-                    {
-                        Message = response,
-                    };
-                    return Ok(NewMessage);
-                }
-                else
-                {
-                    return BadRequest("User is null");
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong: {ex.Message}");
-            }
-        }
-
-        [HttpPost("/Registration")]
-        public async Task<IActionResult> Registration(User user ,int passcode)
-        {
-            try
-            {
-                if (User != null)
-                {
-                    string response = _User.Registration(user,passcode);
-                    var NewMessage = new Client_Response
-                    {
-                        Message = response,
-                    };
-                    return Ok(NewMessage);
-                }
-                else
-                {
-                    return BadRequest("User is null");
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong: {ex.Message}");
-            }
-        }
-
-
-        [HttpPost("/Login")]
-        public async Task<ActionResult<string>> Login([FromBody] UserDto model)
-        {
-            User User_credentials = _User.Login(model.Email, model.Password);
-            if (User_credentials != null)
-            {
-                string token =_User.CreateToken(User_credentials);
-                return Ok(token);
-            }
-            else
-            {
-                return BadRequest("Email or Password is incorrect!");
-            }
-        }
         [HttpPost("/reset password")]
         public async Task<ActionResult> Reset_Password(string Mail)
         {

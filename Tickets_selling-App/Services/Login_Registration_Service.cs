@@ -1,25 +1,23 @@
-﻿using Tickets_selling_App.Interfaces;
-using Tickets_selling_App.Models;
+﻿
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Tickets_selling_App.Dtos;
-using Azure;
-using Microsoft.EntityFrameworkCore;
+using Tickets_selling_App.Interfaces;
+using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App.Services
 {
-    public class UserServicre : User_Interface
+    public class Login_Registration_Service :Login_Registration_Interface
     {
         private readonly Tkt_Dbcontext _context;
-        private readonly IConfiguration _configuration;
         private readonly Gmail_Interface _gmail;
-        public UserServicre (Tkt_Dbcontext tkt_Dbcontext, IConfiguration configuration, Gmail_Interface gmail)
+        private readonly IConfiguration _configuration; 
+        public Login_Registration_Service (Tkt_Dbcontext context, Gmail_Interface gmail, IConfiguration configuration)
         {
-            _context = tkt_Dbcontext;
+            _context = context;
+            _gmail = gmail; 
             _configuration = configuration;
-            _gmail = gmail;
         }
         public string Registration_Validation(string Email)
         {
@@ -32,11 +30,11 @@ namespace Tickets_selling_App.Services
                     response = "An account has already been created using this email address. Please log in to your account or register with a different email <3 .";
                 }
                 else
-                {   
+                {
                     Random random = new Random();
                     int passcode = random.Next(100000, 999999);
 
-                    var NewEmailOrNot = _context.Emailvalidation.FirstOrDefault(x=>x.Email == Email);
+                    var NewEmailOrNot = _context.Emailvalidation.FirstOrDefault(x => x.Email == Email);
                     if (NewEmailOrNot != null)
                     {
                         NewEmailOrNot.Passcode = passcode;
@@ -51,8 +49,8 @@ namespace Tickets_selling_App.Services
                             Passcode = passcode,
                             Expiration = DateTime.Now.AddMinutes(2),
                         };
-                            _context.Emailvalidation.Add(ValidateEmail);
-                            _context.SaveChanges();
+                        _context.Emailvalidation.Add(ValidateEmail);
+                        _context.SaveChanges();
                     }
                     _gmail.Email_Validation(Email, passcode);
                     response = "We have sent you 6 digits passcode to your email address, please enter below to finish registration!";
@@ -62,11 +60,11 @@ namespace Tickets_selling_App.Services
         }
 
         public string Registration(User user, int passcode)
-        {               
+        {
             string response = "";
             try
             {
-                var CheckEmail = _context.Emailvalidation.FirstOrDefault(x=>x.Email == user.Email && x.Passcode == passcode);
+                var CheckEmail = _context.Emailvalidation.FirstOrDefault(x => x.Email == user.Email && x.Passcode == passcode);
                 if (CheckEmail != null)
                 {
                     if (CheckEmail.Expiration > DateTime.Now)
@@ -99,9 +97,9 @@ namespace Tickets_selling_App.Services
                     response = "Passcode is incorrect please try sending it again!";
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                return (ex.Message); 
+                return (ex.Message);
             }
             return response;
         }
@@ -138,7 +136,7 @@ namespace Tickets_selling_App.Services
                 new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
             };
-          
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
@@ -153,118 +151,6 @@ namespace Tickets_selling_App.Services
             var token = tokenHandler.CreateToken(tokenDescriptor);
 
             return tokenHandler.WriteToken(token);
-        }
-        public ICollection<EveryUsersDTO> AllCustomers()
-        {
-            var Users = _context.User.ToList();
-
-            var UserToReturn = new List<EveryUsersDTO>(); 
-
-            foreach (var x in Users)
-            {
-                var UserListItem = new EveryUsersDTO()
-                {
-                    Name = x.Name,
-                    Email = x.Email,
-                    LastName = x.LastName,
-                    Phone = x.Phone,
-                    Profile_Picture = x.Profile_Picture
-                };
-
-                UserToReturn.Add(UserListItem);
-            }
-
-            return UserToReturn;
-        }
-
-        public string Password_Restoration(string mail)
-        {
-            string response = "";
-
-            try
-            {
-                var UserValid = _context.User.FirstOrDefault(x => x.Email == mail);
-
-                if (UserValid != null)
-                {
-                    Random random = new Random();
-                    int passcode = random.Next(100000, 999999);
-                    if (_gmail != null)
-                    {
-                        _gmail.Password_Restoration(mail, passcode);
-                    }
-                    else
-                    {
-                        throw new NullReferenceException("_gmail is null. Cannot send email.");
-                    }
-
-                    var PassChange = _context.PasswordReset.FirstOrDefault(x => x.UserID == UserValid.ID);
-                    if (PassChange != null)
-                    {
-                        PassChange.Passcode = passcode;
-                        PassChange.Expiration = DateTime.Now.AddMinutes(1);
-                    }
-                    else
-                    {
-                        var PasscodeUpdate = new PasswordReset()
-                        {
-                            UserID = UserValid.ID,
-                            Passcode = passcode,
-                            Expiration = DateTime.Now.AddMinutes(1),
-                        };
-                        _context.PasswordReset.Add(PasscodeUpdate);
-                    }
-
-                    _context.SaveChanges();
-
-                    response = "Passcode has been sent to your Gmail";
-                }
-                else
-                {
-                    response = "Could Not Find Mail";
-                }
-            }
-            catch (Exception ex)
-            {
-                response = "An error occurred while processing your request.";
-                throw;
-            }
-
-            return response;
-        }
-
-        public string Changing_Password(string mail, string password, int passcode)
-        {
-            string response = "";
-           
-            var user = _context.User.FirstOrDefault(x=> x.Email == mail);
-            if (user != null)
-            {
-                var PassCode_Compare = _context.PasswordReset.FirstOrDefault(x => x.ID == user.ID);
-                if (PassCode_Compare != null && PassCode_Compare.Expiration >= DateTime.Now)
-                {
-                    if (passcode == PassCode_Compare.Passcode)
-                    {
-                        user.Password = password;
-                        PassCode_Compare.Expiration = DateTime.Now;
-                        _context.SaveChanges();   
-                        response = $"Your Password has changed to {password}";
-                    }
-                    else
-                    {
-                        response = "Passcode is incorrect";
-                    }
-                }
-                else
-                {
-                    response = "Passcode expired try again";
-                }
-            }
-            else
-            {
-                response = "Could Not find Mail";
-            }
-            return response;
         }
     }
 }
