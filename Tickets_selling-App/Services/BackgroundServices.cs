@@ -9,6 +9,7 @@ namespace Tickets_selling_App.Services
         {
             _context = context;
         }
+
         public void DeleteExpiredEmailValidations()
         {
             var ValidationsToRemove = _context.Emailvalidation.Where(x => x.Expiration < DateTime.Now);

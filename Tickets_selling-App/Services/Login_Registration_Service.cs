@@ -1,8 +1,9 @@
-﻿
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
+using Tickets_selling_App.Dtos;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 
@@ -19,7 +20,9 @@ namespace Tickets_selling_App.Services
             _gmail = gmail; 
             _configuration = configuration;
         }
-        public string Registration_Validation(string Email)
+
+        //Email validation----------------------------------------------
+        public string Email_Validation(string Email)
         {
             string response = "";
             bool CheckEmail = _context.User.Any(x => x.Email == Email);
@@ -38,7 +41,7 @@ namespace Tickets_selling_App.Services
                     if (NewEmailOrNot != null)
                     {
                         NewEmailOrNot.Passcode = passcode;
-                        NewEmailOrNot.Expiration = DateTime.Now.AddMinutes(2);
+                        NewEmailOrNot.Expiration = DateTime.Now.AddMinutes(5);
                         _context.SaveChanges();
                     }
                     else
@@ -58,8 +61,8 @@ namespace Tickets_selling_App.Services
             }
             return response;
         }
-
-        public string Registration(User user, int passcode)
+        //Registration----------------------------------------------
+        public string Registration(RegistrationDTO user, int passcode)
         {
             string response = "";
             try
@@ -67,9 +70,10 @@ namespace Tickets_selling_App.Services
                 var CheckEmail = _context.Emailvalidation.FirstOrDefault(x => x.Email == user.Email && x.Passcode == passcode);
                 if (CheckEmail != null)
                 {
-                    if (CheckEmail.Expiration > DateTime.Now)
+                    if (DateTime.Now < CheckEmail.Expiration )
                     {
-                        if (user != null)
+                        var UserRegistered = _context.User.FirstOrDefault(x => x.Email == user.Email);
+                        if (UserRegistered == null)
                         {
                             response = $"{user.Name} You successfully registered to our app!";
                             var hashed = HashPassword(user.Password);
@@ -80,11 +84,15 @@ namespace Tickets_selling_App.Services
                                 Name = user.Name,
                                 Password = hashed,
                                 Phone = user.Phone,
+                                Role = "User",
                                 Profile_Picture = null,
                             };
                             _context.User.Add(Register_customer);
-                            _context.Emailvalidation.Remove(CheckEmail);
                             _context.SaveChanges();
+                        }
+                        else
+                        {
+                            response = "Email already registered";
                         }
                     }
                     else
@@ -114,14 +122,17 @@ namespace Tickets_selling_App.Services
         {
             return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
-        public User Login(string Email, string Password)
+
+
+        //Login----------------------------------------------
+        public User Login(LoginDto userDto)
         {
-            var user = _context.User.FirstOrDefault(u => u.Email == Email);
+            var user = _context.User.FirstOrDefault(u => u.Email == userDto.Email);
 
             if (user != null)
             {
                 string hashedPassword = user.Password;
-                bool isPasswordCorrect = VerifyPassword(Password, hashedPassword);
+                bool isPasswordCorrect = VerifyPassword(userDto.Password, hashedPassword);
                 if (isPasswordCorrect)
                 {
                     return user;
@@ -135,6 +146,7 @@ namespace Tickets_selling_App.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.ID.ToString()),
                 new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Role, user.Role),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));

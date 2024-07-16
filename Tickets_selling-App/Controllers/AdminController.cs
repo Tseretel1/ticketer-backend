@@ -11,11 +11,9 @@ namespace Tickets_selling_App.Controllers
     [ApiController]
     public class AdminController : Controller
     {
-        private readonly Tkt_Dbcontext _context;
         private readonly Admin_Interface _admin;
-        public AdminController(Tkt_Dbcontext context, Admin_Interface admin)
+        public AdminController(Admin_Interface admin)
         {
-            _context = context;
             _admin = admin;
         }
         [HttpPost("/Add New Tickets")]
@@ -47,28 +45,12 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong {ex.Message}");
             }
         }
-        [HttpGet("/See Tickets")]
-        public IActionResult Tickets()
-        {
-            try
-            {
-                var Tickets = _admin.See_Tickets();
-
-                if (Tickets == null || !Tickets.Any())
-                    return NotFound("Ticket not Found");
-                return Ok(Tickets);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong {ex.Message}");
-            }
-        }
         [HttpDelete("/Delete Tickets")]
-        public IActionResult Delete_Ticket(string type)
+        public IActionResult Delete_Ticket(int TicketId)
         {
             try
             {
-                _admin.DeleteTicket(type);
+                _admin.DeleteTicket(TicketId);
                 return Ok("Ticket Successfully Deleted!");
             }
             catch

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Tickets_selling_App.Dtos;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
@@ -18,13 +19,13 @@ namespace Tickets_selling_App.Controllers
         }
 
         [HttpPost("/Registration Validation")]
-        public async Task<IActionResult> Registration_Validations(string Email)
+        public async Task<IActionResult> Registration_Validations([FromBody] string email)
         {
             try
             {
-                if (User != null)
+                if (email != null)
                 {
-                    string response = _Login.Registration_Validation(Email);
+                    string response = _Login.Email_Validation(email);
                     var NewMessage = new Client_Response
                     {
                         Message = response,
@@ -41,15 +42,14 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong: {ex.Message}");
             }
         }
-
         [HttpPost("/Registration")]
-        public async Task<IActionResult> Registration(User user, int passcode)
+        public async Task<IActionResult> Registration([FromBody] RegistrationRequest request)
         {
             try
             {
-                if (User != null)
+                if (request.User != null)
                 {
-                    string response = _Login.Registration(user, passcode);
+                    string response = _Login.Registration(request.User, request.Passcode);
                     var NewMessage = new Client_Response
                     {
                         Message = response,
@@ -58,24 +58,34 @@ namespace Tickets_selling_App.Controllers
                 }
                 else
                 {
-                    return BadRequest("User is null");
+                    return BadRequest("can't register User does not exist!");
                 }
             }
             catch (Exception ex)
             {
                 return BadRequest($"Something went wrong: {ex.Message}");
             }
+        }
+
+        public class RegistrationRequest
+        {
+            public RegistrationDTO User { get; set; }
+            public int Passcode { get; set; }
         }
 
 
         [HttpPost("/Login")]
-        public async Task<ActionResult<string>> Login([FromBody] UserDto model)
+        public async Task<ActionResult<string>> Login([FromBody] LoginDto model)
         {
-            User User_credentials = _Login.Login(model.Email, model.Password);
+            User User_credentials = _Login.Login(model);
             if (User_credentials != null)
             {
                 string token = _Login.CreateToken(User_credentials);
-                return Ok(token);
+                var ReturToken = new Client_Response
+                {
+                    Message = token,
+                };
+                return Ok(ReturToken);
             }
             else
             {

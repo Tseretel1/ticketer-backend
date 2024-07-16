@@ -20,24 +20,33 @@ namespace Tickets_selling_App.Services
             {
                 if (ticket != null && ticket.Activation_Date < ticket.Expiration_Date)
                 {
-                    Response = "Tickets has been added";
-                    string type = Guid.NewGuid().ToString();
-                    for (int T = 1; T <= ticket.TicketCount; T++)
+                    var AddTicket = new Ticket
                     {
-                        var InsertTicket = new Ticket
+                        Activation_Date = ticket.Activation_Date,
+                        Expiration_Date = ticket.Expiration_Date,
+                        Description = ticket.Description,
+                        Price = ticket.Price,
+                        Title = ticket.Title,
+                        Photo = ticket.Photo,
+                        Genre = ticket.Genre,
+                    };
+
+                    _context.Tickets.Add(AddTicket);
+                    _context.SaveChanges();
+                    for (var i = 1; i <= ticket.TicketCount; i++)
+                    {
+                        var TicketInstance = new TicketInstance
                         {
-                            Seat = ticket.Seat,
-                            Activation_Date = ticket.Activation_Date,
-                            Expiration_Date = ticket.Expiration_Date,
-                            Description = ticket.Description,
-                            Price = ticket.Price,
-                            Title = ticket.Title,
+                            TicketID = AddTicket.ID,
                             UniqueID = Guid.NewGuid().ToString(),
-                            Type = type,
+                            Sold = false,
                         };
-                        _context.Ticket.Add(InsertTicket);
-                        _context.SaveChanges();
+                        _context.TicketInstances.Add(TicketInstance);
                     }
+
+                    _context.SaveChanges();
+
+                    Response = "Tickets have been added";
                 }
             }
             catch (Exception ex)
@@ -47,58 +56,42 @@ namespace Tickets_selling_App.Services
             return Response;
         }
 
-        public void DeleteTicket(string Type)
-        {
-            if (Type != null)
-            {
-                var ticketsToDelete = _context.Ticket.Where(i => i.Type == Type).ToList();
 
-                if (ticketsToDelete.Any())
-                {
-                    _context.Ticket.RemoveRange(ticketsToDelete);
-                    _context.SaveChanges();
-                }
+
+        public void DeleteTicket(int TicketId)
+        {
+            var TicketToDelete = _context.Tickets.FirstOrDefault(x=>x.ID == TicketId);
+            if (TicketToDelete != null)
+            {
+                var instancesToDelete = _context.TicketInstances.Where(x => x.TicketID == TicketToDelete.ID);
+                _context.TicketInstances.RemoveRange(instancesToDelete);
+                _context.Tickets.Remove(TicketToDelete);
+                _context.SaveChanges();
             }
         }
 
-        public ICollection<Ticket> GetAll_Tickets()
+        public ICollection<TicketDto> GetAll_Tickets()
         {
-            return _context.Ticket.ToList();
-        }
-
-        public ICollection<TicketDto> See_Tickets()
-        {
-            var Return_Tickets = new List<TicketDto>();
-
-            var ASameticketsWithCount = _context.Ticket
-                .GroupBy(t => t.Type)
-                .Select(g => new {
-                    Ticket = g.FirstOrDefault(),
-                    Count = g.Count()
-                })
-                .ToList();
-
-            foreach (var item in ASameticketsWithCount)
+            var Ticket = _context.Tickets.ToList();
+            var TicketDTo = new List<TicketDto>();
+            foreach (var x in Ticket)
             {
-                var ticket = item.Ticket;
-                var count = item.Count;
-
-                var ticketDto = new TicketDto
+                var TicketInstances = _context.TicketInstances.Where(x => x.Sold == false).Count();
+                TicketDto TicketD = new TicketDto()
                 {
-                    Title = ticket.Title,
-                    Description = ticket.Description,
-                    Seat = ticket.Seat,
-                    Price = ticket.Price,
-                    Activation_Date = ticket.Activation_Date,
-                    Expiration_Date = ticket.Expiration_Date,
-                    TicketCount = count
+                    ID = x.ID,
+                    Activation_Date = x.Activation_Date,
+                    Description = x.Description,
+                    Expiration_Date = x.Expiration_Date,
+                    Genre = x.Genre,
+                    Photo = x.Photo,
+                    Price = x.Price,
+                    Title = x.Title,
+                    TicketCount = TicketInstances,
                 };
-
-                Return_Tickets.Add(ticketDto);
+                TicketDTo.Add(TicketD);
             }
-
-            return Return_Tickets;
+            return TicketDTo;
         }
-
     }
 }
