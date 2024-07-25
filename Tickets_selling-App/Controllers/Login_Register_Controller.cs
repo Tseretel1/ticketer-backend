@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Tickets_selling_App.Dtos;
+using Newtonsoft.Json.Linq;
+using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 using Tickets_selling_App.User_Side_Response;
@@ -10,10 +11,10 @@ namespace Tickets_selling_App.Controllers
     [Route("api/[controller]")]
     [ApiController]
 
-    public class Login_registration : Controller
+    public class Login_Register_Controller : Controller
     {
         private readonly Login_Registration_Interface _Login;
-        public Login_registration(Login_Registration_Interface customer)
+        public Login_Register_Controller(Login_Registration_Interface customer)
         {
             _Login = customer;
         }
@@ -89,7 +90,11 @@ namespace Tickets_selling_App.Controllers
             }
             else
             {
-                return BadRequest("Email or Password is incorrect!");
+                var ReturToken = new Client_Response
+                {
+                    Message = "Email or Password is incorrect!",
+                };
+                return NotFound(ReturToken);
             }
         }
 

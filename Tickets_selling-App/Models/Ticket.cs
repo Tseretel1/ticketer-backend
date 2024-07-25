@@ -13,5 +13,6 @@ namespace Tickets_selling_App.Models
         public DateTime Expiration_Date { get; set; }
         public string Genre { get; set; }
         public string Photo { get; set; }
+        public int PublisherID { get; set; }
     }
 }

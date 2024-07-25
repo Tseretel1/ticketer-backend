@@ -4,9 +4,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Tickets_selling_App.Dtos;
 using Azure;
 using Microsoft.EntityFrameworkCore;
+using Tickets_selling_App.Dtos.User;
 
 namespace Tickets_selling_App.Services
 {
@@ -40,14 +40,12 @@ namespace Tickets_selling_App.Services
 
                 UserToReturn.Add(UserListItem);
             }
-
             return UserToReturn;
         }
 
         public string Password_Restoration(string mail)
         {
             string response = "";
-
             try
             {
                 var UserValid = _context.User.FirstOrDefault(x => x.Email == mail);
@@ -64,7 +62,6 @@ namespace Tickets_selling_App.Services
                     {
                         throw new NullReferenceException("_gmail is null. Cannot send email.");
                     }
-
                     var PassChange = _context.PasswordReset.FirstOrDefault(x => x.UserID == UserValid.ID);
                     if (PassChange != null)
                     {
@@ -96,7 +93,6 @@ namespace Tickets_selling_App.Services
                 response = "An error occurred while processing your request.";
                 throw;
             }
-
             return response;
         }
 

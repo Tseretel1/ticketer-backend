@@ -1,4 +1,4 @@
-﻿namespace Tickets_selling_App.Dtos
+﻿namespace Tickets_selling_App.Dtos.User
 {
     public class RegistrationDTO
     {

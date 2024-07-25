@@ -3,7 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
-using Tickets_selling_App.Dtos;
+using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 

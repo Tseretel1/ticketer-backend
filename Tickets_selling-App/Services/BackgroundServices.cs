@@ -2,7 +2,7 @@
 
 namespace Tickets_selling_App.Services
 {
-    public class BackgroundServices
+    public class BackgroundServices :BackgroundService
     {
         private readonly Tkt_Dbcontext _context;
         public BackgroundServices(Tkt_Dbcontext context)
@@ -15,6 +15,11 @@ namespace Tickets_selling_App.Services
             var ValidationsToRemove = _context.Emailvalidation.Where(x => x.Expiration < DateTime.Now);
             _context.Emailvalidation.RemoveRange(ValidationsToRemove);
             _context.SaveChanges();
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -5,8 +5,6 @@ using Microsoft.OpenApi.Models;
 using Tickets_selling_App;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Services;
-using Hangfire;
-using Hangfire.SqlServer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -35,39 +33,25 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+    options.AddPolicy("CreatorOnly", policy => policy.RequireRole("Creator"));
 });
+
 
 // Add application services
 builder.Services.AddScoped<Admin_Interface, AdminService>();
 builder.Services.AddScoped<User_Interface, UserServicre>();
 builder.Services.AddScoped<Gmail_Interface, GmailService>();
 builder.Services.AddScoped<Login_Registration_Interface, Login_Registration_Service>();
-builder.Services.AddScoped<BackgroundServices>();
+builder.Services.AddScoped<NotauthorisedInterface,NotauthorisedServices>();
 
-// Configure Hangfire
-builder.Services.AddHangfire(configuration => configuration
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UseSqlServerStorage(builder.Configuration.GetConnectionString("TicketSelling_Conection"), new SqlServerStorageOptions
-    {
-        CommandBatchMaxTimeout = TimeSpan.FromMinutes(1),
-        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(1),
-        QueuePollInterval = TimeSpan.Zero,
-        UseRecommendedIsolationLevel = true,
-        DisableGlobalLocks = true,
-    }));
-
-builder.Services.AddHangfireServer();
 
 // Configure CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngularLocalhost",
+    options.AddPolicy("AllowAllOrigins",
         builder =>
         {
-            builder.WithOrigins("http://localhost:4200/")
-                   .AllowAnyHeader()
+            builder.AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowAnyOrigin();
         });
@@ -78,7 +62,6 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
 });
-
 // Add controllers
 builder.Services.AddControllers();
 
@@ -92,6 +75,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseCors("AllowAllOrigins");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -100,16 +84,6 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Photos")),
     RequestPath = "/Photos"
 });
-
-// Configure Hangfire Dashboard
-app.UseHangfireDashboard();
-
-// Schedule the recurring job
-using (var scope = app.Services.CreateScope())
-{
-    var backgroundServices = scope.ServiceProvider.GetRequiredService<BackgroundServices>();
-    RecurringJob.AddOrUpdate(() => backgroundServices.DeleteExpiredEmailValidations(), Cron.Minutely);
-}
 
 // Apply CORS policies
 app.UseCors("AllowAngularLocalhost");

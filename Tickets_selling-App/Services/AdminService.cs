@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Tickets_selling_App.Dtos;
+using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 
@@ -13,50 +13,48 @@ namespace Tickets_selling_App.Services
         {
             _context = context;
         }
-        public string AddTicket(TicketDto ticket)
+        public string AddTicket(CreateTicketDto ticket)
         {
-            string Response = "";
+            string response = "";
             try
             {
                 if (ticket != null && ticket.Activation_Date < ticket.Expiration_Date)
                 {
-                    var AddTicket = new Ticket
+                    var newTicket = new Ticket
                     {
-                        Activation_Date = ticket.Activation_Date,
-                        Expiration_Date = ticket.Expiration_Date,
+                        Title = ticket.Title,
                         Description = ticket.Description,
                         Price = ticket.Price,
-                        Title = ticket.Title,
-                        Photo = ticket.Photo,
+                        Activation_Date = ticket.Activation_Date,
+                        Expiration_Date = ticket.Expiration_Date,
                         Genre = ticket.Genre,
+                        Photo = ticket.Photo,
+                        PublisherID = ticket.PublisherID,
                     };
 
-                    _context.Tickets.Add(AddTicket);
+                    _context.Tickets.Add(newTicket);
                     _context.SaveChanges();
+
                     for (var i = 1; i <= ticket.TicketCount; i++)
                     {
-                        var TicketInstance = new TicketInstance
+                        var instances = new TicketInstance
                         {
-                            TicketID = AddTicket.ID,
-                            UniqueID = Guid.NewGuid().ToString(),
                             Sold = false,
+                            TicketID = newTicket.ID,
+                            UniqueID = Guid.NewGuid().ToString(),
                         };
-                        _context.TicketInstances.Add(TicketInstance);
+                        _context.TicketInstances.Add(instances);
                     }
-
                     _context.SaveChanges();
-
-                    Response = "Tickets have been added";
+                    response = "Tickets have been added successfully";
                 }
             }
             catch (Exception ex)
             {
-                Response = ex.Message;
+                response = "Catch: " + ex.Message;
             }
-            return Response;
+            return response;
         }
-
-
 
         public void DeleteTicket(int TicketId)
         {
@@ -68,30 +66,6 @@ namespace Tickets_selling_App.Services
                 _context.Tickets.Remove(TicketToDelete);
                 _context.SaveChanges();
             }
-        }
-
-        public ICollection<TicketDto> GetAll_Tickets()
-        {
-            var Ticket = _context.Tickets.ToList();
-            var TicketDTo = new List<TicketDto>();
-            foreach (var x in Ticket)
-            {
-                var TicketInstances = _context.TicketInstances.Where(x => x.Sold == false).Count();
-                TicketDto TicketD = new TicketDto()
-                {
-                    ID = x.ID,
-                    Activation_Date = x.Activation_Date,
-                    Description = x.Description,
-                    Expiration_Date = x.Expiration_Date,
-                    Genre = x.Genre,
-                    Photo = x.Photo,
-                    Price = x.Price,
-                    Title = x.Title,
-                    TicketCount = TicketInstances,
-                };
-                TicketDTo.Add(TicketD);
-            }
-            return TicketDTo;
         }
     }
 }

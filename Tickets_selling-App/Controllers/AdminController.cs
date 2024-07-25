@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Runtime.CompilerServices;
 using Tickets_selling_App.Dtos;
+using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 
@@ -17,45 +20,40 @@ namespace Tickets_selling_App.Controllers
             _admin = admin;
         }
         [HttpPost("/Add New Tickets")]
-        public IActionResult AddTicket(TicketDto ticket)
+        [Authorize(Policy = "CreatorOnly")]
+        public IActionResult AddTicket(CreateTicketDto ticket)
         {
             try
             {
-                string Response = _admin.AddTicket(ticket);
-                return Ok($"{Response}");
+                if (ticket == null)
+                {
+                    return BadRequest("Ticket does not exist");
+                }
+
+                if (ticket.Activation_Date >= ticket.Expiration_Date)
+                {
+                    return BadRequest(new {message = "Activation date must be earlier than expiration date" });
+                }
+
+                string response = _admin.AddTicket(ticket);
+                return Ok(new { message = response });
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong");
+                return StatusCode(500, "Internal server error");
             }
         }
-        [HttpGet("/See All Tickets")]
-        public IActionResult GetAlltickets()
+        [HttpDelete("/DeleteTickets/{id}")]
+        public IActionResult Delete_Ticket([FromRoute] int id)
         {
             try
             {
-                var Tickets = _admin.GetAll_Tickets();
-
-                if (Tickets == null || !Tickets.Any())
-                    return NotFound("Ticket not Found");
-                return Ok(Tickets);
-            }
-            catch(Exception ex)
-            {
-                return BadRequest($"Something went wrong {ex.Message}");
-            }
-        }
-        [HttpDelete("/Delete Tickets")]
-        public IActionResult Delete_Ticket(int TicketId)
-        {
-            try
-            {
-                _admin.DeleteTicket(TicketId);
+                _admin.DeleteTicket(id);
                 return Ok("Ticket Successfully Deleted!");
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest("Something went wrong!");
+                return BadRequest("Something went wrong! " + ex.Message);
             }
         }
     }

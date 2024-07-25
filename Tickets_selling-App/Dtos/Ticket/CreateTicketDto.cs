@@ -1,9 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Tickets_selling_App.Dtos
+﻿namespace Tickets_selling_App.Dtos.TicketDTO
 {
-    public class TicketDto
-    {       
+    public class CreateTicketDto
+    {
         public int ID { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
@@ -13,5 +11,6 @@ namespace Tickets_selling_App.Dtos
         public DateTime Expiration_Date { get; set; }
         public string Photo { get; set; }
         public int TicketCount { get; set; }
+        public int PublisherID { get; set; }
     }
 }
