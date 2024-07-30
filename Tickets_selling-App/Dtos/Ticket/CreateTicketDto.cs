@@ -11,6 +11,5 @@
         public DateTime Expiration_Date { get; set; }
         public string Photo { get; set; }
         public int TicketCount { get; set; }
-        public int PublisherID { get; set; }
     }
 }

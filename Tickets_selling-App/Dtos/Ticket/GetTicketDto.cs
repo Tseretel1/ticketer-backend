@@ -15,6 +15,7 @@ namespace Tickets_selling_App.Dtos.TicketDTO
         public DateTime Expiration_Date { get; set; }
         public string Photo { get; set; }
         public int TicketCount { get; set; }
+        public int ViewCount { get; set; }
         public CreatorDTO? Publisher { get; set; }
     }
 }

@@ -21,15 +21,15 @@ namespace Tickets_selling_App.Services
             _configuration = configuration;
             _gmail = gmail;
         }
-        public ICollection<EveryUsersDTO> AllCustomers()
+        public ICollection<UsersDTO> AllCustomers()
         {
             var Users = _context.User.ToList();
 
-            var UserToReturn = new List<EveryUsersDTO>();
+            var UserToReturn = new List<UsersDTO>();
 
             foreach (var x in Users)
             {
-                var UserListItem = new EveryUsersDTO()
+                var UserListItem = new UsersDTO()
                 {
                     Name = x.Name,
                     Email = x.Email,

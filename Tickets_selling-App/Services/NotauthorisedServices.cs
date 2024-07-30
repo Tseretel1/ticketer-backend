@@ -39,10 +39,23 @@ namespace Tickets_selling_App.Services
                     Title = x.Title,
                     TicketCount = TicketInstances,
                     Publisher = Publisher,
+                    ViewCount = x.ViewCount,
                 };
                 TicketDTo.Add(TicketD);
             }
             return TicketDTo;
+        }
+
+        public bool PlusViewCount(int id)
+        {
+            var Ticket = _context.Tickets.FirstOrDefault(x=> x.ID == id);
+            if(Ticket!=null)
+            {
+                Ticket.ViewCount += 1;
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
         }
 
         public ICollection<GetTicketDto> PopularEvents()

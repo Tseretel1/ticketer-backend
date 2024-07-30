@@ -13,7 +13,7 @@ namespace Tickets_selling_App.Services
         {
             _context = context;
         }
-        public string AddTicket(CreateTicketDto ticket)
+        public string AddTicket(CreateTicketDto ticket, int id)
         {
             string response = "";
             try
@@ -29,7 +29,8 @@ namespace Tickets_selling_App.Services
                         Expiration_Date = ticket.Expiration_Date,
                         Genre = ticket.Genre,
                         Photo = ticket.Photo,
-                        PublisherID = ticket.PublisherID,
+                        PublisherID = id,
+                        ViewCount = 0,
                     };
 
                     _context.Tickets.Add(newTicket);

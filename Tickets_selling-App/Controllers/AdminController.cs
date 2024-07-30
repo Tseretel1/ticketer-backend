@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Azure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using System.Runtime.CompilerServices;
-using Tickets_selling_App.Dtos;
+using System.Security.Claims;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
-using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App.Controllers
 {
@@ -25,18 +22,31 @@ namespace Tickets_selling_App.Controllers
         {
             try
             {
+                string Response = "";
                 if (ticket == null)
                 {
                     return BadRequest("Ticket does not exist");
                 }
 
-                if (ticket.Activation_Date >= ticket.Expiration_Date)
+                if (ticket.Activation_Date <= ticket.Expiration_Date)
                 {
                     return BadRequest(new {message = "Activation date must be earlier than expiration date" });
                 }
-
-                string response = _admin.AddTicket(ticket);
-                return Ok(new { message = response });
+                else
+                {
+                    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    int UserID =  Convert.ToInt32(userId);
+                    if (userId != null) {
+                        string response = _admin.AddTicket(ticket,UserID);
+                        Response = response;
+                    }
+                    else
+                    {
+                        return Ok("userid is null");
+                    }
+                
+                }
+                return Ok(new { message = Response });
             }
             catch (Exception ex)
             {

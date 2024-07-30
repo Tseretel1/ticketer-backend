@@ -6,5 +6,6 @@ namespace Tickets_selling_App.Interfaces
     {
         ICollection<GetTicketDto> GetAll_Tickets();
         ICollection<GetTicketDto> PopularEvents();
+        bool PlusViewCount (int id);
     }
 }

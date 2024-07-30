@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Tickets_selling_App.Interfaces;
+using Tickets_selling_App.Migrations;
 
 namespace Tickets_selling_App.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UnauthorisedController : Controller
+    public class NotauthorisedController : Controller
     {
         private readonly NotauthorisedInterface _notAuth;
-        public UnauthorisedController (NotauthorisedInterface notAuth)
+        public NotauthorisedController (NotauthorisedInterface notAuth)
         {
             _notAuth = notAuth;
         }
@@ -44,6 +45,26 @@ namespace Tickets_selling_App.Controllers
             catch (Exception ex)
             {
                 return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+        [HttpPatch("/View Count")]
+        public IActionResult ViewCount([FromBody] int id )
+        {
+            try
+            {
+                bool Response  = _notAuth.PlusViewCount(id);
+                if (Response)
+                {
+                    return Ok("ViewCount +");    
+                }
+                else
+                {
+                    return NotFound("Ticket not found");
+                }
+            }
+            catch (Exception ex)
+            {
+               return BadRequest(ex.Message);
             }
         }
     }

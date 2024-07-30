@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
+﻿using Microsoft.AspNetCore.Mvc;
 using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
