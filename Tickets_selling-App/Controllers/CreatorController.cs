@@ -4,6 +4,8 @@ using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
+using Tickets_selling_App.Models;
+using Tickets_selling_App.User_Side_Response;
 
 namespace Tickets_selling_App.Controllers
 {
@@ -14,6 +16,40 @@ namespace Tickets_selling_App.Controllers
         {
             _creator = admin;
         }
+
+        [HttpPost("/Register As creator")]
+        [Authorize(Policy = "UserOnly")]
+
+        public IActionResult RegisterAsCreator([FromBody] Creator creator)
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var CreatorRegistered = _creator.Register_as_Creator(creator, Convert.ToInt32(userId));
+                if (CreatorRegistered)
+                {
+                    var message = new Client_Response
+                    {
+                        Message = "We will check your Personal information and then Verify you",
+                    };
+                    return Ok(message);
+                }
+                else
+                {
+                    var message = new Client_Response
+                    {
+                        Message = "You are already registered, wait for admin to verify you!",
+                    };
+                    return Ok(message);
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return BadRequest();
+        }
+
         [HttpPost("/Add New Tickets Creator")]
         [Authorize(Policy = "CreatorOnly")]
         public IActionResult AddTicket([FromBody] CreateTicketDto ticket)
@@ -32,9 +68,16 @@ namespace Tickets_selling_App.Controllers
                 }
                 else
                 {
-                    var userId = User.FindFirst("UserID")?.Value;
-                    string response = _creator.AddTicket(ticket, Convert.ToInt32(userId));
+                    if (ticket.TicketCount<=250)
+                    {
+                        var userId = User.FindFirst("UserID")?.Value;
+                        string response = _creator.AddTicket(ticket, Convert.ToInt32(userId));
                         Response = response;
+                    }
+                    else
+                    {
+                        Response = "You cant Create more than 250 Ticket at once!";
+                    }
                 }
                 return Ok(new { message = Response });
             }
@@ -55,6 +98,8 @@ namespace Tickets_selling_App.Controllers
             }
             return null;
         }
+
+
         [HttpGet("/My Profile")]
         [Authorize(Policy = "CreatorOnly")]
         public IActionResult MyProfile()

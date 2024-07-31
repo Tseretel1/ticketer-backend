@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tickets_selling_App;
 
@@ -11,9 +12,11 @@ using Tickets_selling_App;
 namespace Tickets_selling_App.Migrations
 {
     [DbContext(typeof(Tkt_Dbcontext))]
-    partial class Tkt_DbcontextModelSnapshot : ModelSnapshot
+    [Migration("20240731110903_tikcet and user relation")]
+    partial class tikcetanduserrelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,7 +53,14 @@ namespace Tickets_selling_App.Migrations
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
+                    b.Property<int>("creatorGroupId")
+                        .HasColumnType("int");
+
                     b.HasKey("ID");
+
+                    b.HasIndex("UserID");
+
+                    b.HasIndex("creatorGroupId");
 
                     b.ToTable("Creator");
                 });
@@ -62,9 +72,6 @@ namespace Tickets_selling_App.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Active")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -228,6 +235,25 @@ namespace Tickets_selling_App.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("User");
+                });
+
+            modelBuilder.Entity("Tickets_selling_App.Models.Creator", b =>
+                {
+                    b.HasOne("Tickets_selling_App.Models.User", "user")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tickets_selling_App.Models.CreatorGroup", "creatorGroup")
+                        .WithMany()
+                        .HasForeignKey("creatorGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("creatorGroup");
+
+                    b.Navigation("user");
                 });
 #pragma warning restore 612, 618
         }

@@ -41,7 +41,6 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddScoped<Admin_Interface, AdminService>();
 builder.Services.AddScoped<User_Interface, UserServicre>();
 builder.Services.AddScoped<Gmail_Interface, GmailService>();
-builder.Services.AddScoped<Login_Registration_Interface, Login_Registration_Service>();
 builder.Services.AddScoped<NotauthorisedInterface,NotauthorisedServices>();
 builder.Services.AddScoped<CreatorInterface,CreatorService>();
 

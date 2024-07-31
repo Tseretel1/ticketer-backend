@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Interfaces;
@@ -14,6 +15,7 @@ namespace Tickets_selling_App.Services
         {
             _context = context;
         }
+
         public ICollection<GetTicketDto> GetMyTickets(int UserID)
         {
             var Ticket = _context.Tickets.Where(x => x.PublisherID == UserID).ToList();
@@ -26,7 +28,6 @@ namespace Tickets_selling_App.Services
                     Email = user.Email,
                     LastName = user.LastName,
                     Name = user.Name,
-                    Phone = user.Phone,
                     Profile = user.Profile_Picture,
                 };
                 var TicketInstances = _context.TicketInstances.Where(t => t.Sold == false && t.TicketID == x.ID).Count();
@@ -48,9 +49,6 @@ namespace Tickets_selling_App.Services
             }
             return TicketDTo;
         }
-
-
-
         public UsersDTO GetMyProfile(int userid) 
         {
             var user = _context.User.FirstOrDefault(x => x.ID == userid);
@@ -62,7 +60,6 @@ namespace Tickets_selling_App.Services
                     Email = user.Email,
                     LastName = user.LastName,
                     UserRole = user.Role,
-                    Phone = user.Phone,
                     Profile_Picture = user.Profile_Picture,
                 };
                 return FoundUser;
@@ -123,6 +120,26 @@ namespace Tickets_selling_App.Services
                 _context.Tickets.Remove(TicketToDelete);
                 _context.SaveChanges();
             }
+        }
+
+        public bool Register_as_Creator(Creator Creator,int id)
+        {
+            var Registered = _context.Creator.FirstOrDefault(x=>x.UserID == id ||  x.PersonalID == Creator.PersonalID);
+            if(Registered == null)
+            {
+                var Newcreator = new Creator
+                {
+                    IdCardPhoto = Creator.IdCardPhoto,
+                    PersonalID = Creator.PersonalID,
+                    PhoneNumber = Creator.PhoneNumber,
+                    UserID = id,
+                    Verified = false,
+                };
+                _context.Creator.Add(Newcreator);
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Dtos.User;
+using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App.Interfaces
 {
@@ -9,6 +10,7 @@ namespace Tickets_selling_App.Interfaces
         public ICollection<GetTicketDto> GetMyTickets(int UserID);
         UsersDTO GetMyProfile(int userid);
         void DeleteTicket(int TicketId);
+        bool Register_as_Creator(Creator creator,int id);
     }
 }
 

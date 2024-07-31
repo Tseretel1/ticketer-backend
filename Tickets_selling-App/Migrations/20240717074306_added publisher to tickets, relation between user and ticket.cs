@@ -9,17 +9,14 @@ namespace Tickets_selling_App.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Step 1: Add the column as nullable
             migrationBuilder.AddColumn<int>(
                 name: "Publisher",
                 table: "Tickets",
                 type: "int",
                 nullable: true);
 
-            // Step 2: Set a default valid Publisher value for existing records
             migrationBuilder.Sql("UPDATE Tickets SET Publisher = (SELECT TOP 1 ID FROM [User]) WHERE Publisher IS NULL");
 
-            // Step 3: Alter the column to be non-nullable
             migrationBuilder.AlterColumn<int>(
                 name: "Publisher",
                 table: "Tickets",
@@ -29,7 +26,6 @@ namespace Tickets_selling_App.Migrations
                 oldType: "int",
                 oldNullable: true);
 
-            // Step 4: Create the index and foreign key
             migrationBuilder.CreateIndex(
                 name: "IX_Tickets_Publisher",
                 table: "Tickets",

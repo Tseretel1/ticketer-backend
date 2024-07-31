@@ -23,7 +23,6 @@ namespace Tickets_selling_App.Services
                     Email = user.Email,
                     LastName = user.LastName,
                     Name = user.Name,
-                    Phone = user.Phone,
                     Profile = user.Profile_Picture,
                 };
                 var TicketInstances = _context.TicketInstances.Where(t => t.Sold == false && t.TicketID == x.ID).Count();
@@ -74,7 +73,6 @@ namespace Tickets_selling_App.Services
                     Email = user.Email,
                     LastName = user.LastName,
                     Name = user.Name,
-                    Phone = user.Phone,
                     Profile = user.Profile_Picture,
                 };
                 var ticketDto = new GetTicketDto
@@ -89,11 +87,12 @@ namespace Tickets_selling_App.Services
                     Title = ticket.Title,
                     TicketCount = unsoldTicketCount,
                     Publisher = Publisher,
+
                 };
                 ticketDtos.Add(ticketDto);
             }
             var topTickets = ticketDtos
-                                .OrderByDescending(t => t.TicketCount)
+                                .OrderByDescending(t => t.ViewCount)
                                 .Take(5)
                                 .ToList();
             return topTickets;

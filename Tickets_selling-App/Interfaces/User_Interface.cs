@@ -8,5 +8,9 @@ namespace Tickets_selling_App.Interfaces
         ICollection<UsersDTO> AllCustomers();
         string Password_Restoration(string mail);
         string Changing_Password(string mail, string password,int passcode);
+        string Email_Validation(string Email);
+        string Registration(RegistrationDTO user, int passcode);
+        string CreateToken(User user);
+        User Login(LoginDto user);
     }
 }
