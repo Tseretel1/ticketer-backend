@@ -141,5 +141,14 @@ namespace Tickets_selling_App.Services
             }
             return false;
         }
+        public bool CheckCreator(int id)
+        {
+            var Creator = _context.Creator.FirstOrDefault(x => x.UserID == id);
+            if (Creator != null)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }

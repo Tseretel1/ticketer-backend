@@ -11,6 +11,7 @@ namespace Tickets_selling_App.Interfaces
         UsersDTO GetMyProfile(int userid);
         void DeleteTicket(int TicketId);
         bool Register_as_Creator(Creator creator,int id);
+        bool CheckCreator(int id);
     }
 }
 

@@ -169,52 +169,49 @@ namespace Tickets_selling_App.Services
         //Registration----------------------------------------------
         public string Registration(RegistrationDTO user, int passcode)
         {
-            string response = "";
             try
             {
-                var CheckEmail = _context.Emailvalidation.FirstOrDefault(x => x.Email == user.Email && x.Passcode == passcode);
-                if (CheckEmail != null)
+                var validEmail = _context.Emailvalidation
+                    .FirstOrDefault(x => x.Email == user.Email && x.Passcode == passcode);
+
+                if (validEmail == null)
                 {
-                    if (DateTime.Now < CheckEmail.Expiration)
-                    {
-                        var UserRegistered = _context.User.FirstOrDefault(x => x.Email == user.Email);
-                        if (UserRegistered == null)
-                        {
-                            response = $"{user.Name} You successfully registered to our app!";
-                            var hashed = HashPassword(user.Password);
-                            var Register_customer = new User
-                            {
-                                Email = user.Email,
-                                LastName = user.LastName,
-                                Name = user.Name,
-                                Password = hashed,
-                                Role = "User",
-                                Profile_Picture = null,
-                            };
-                            _context.User.Add(Register_customer);
-                            _context.SaveChanges();
-                        }
-                        else
-                        {
-                            response = "Email already registered";
-                        }
-                    }
-                    else
-                    {
-                        response = "Passcode expired please try again";
-                    }
+                    return "Passcode is incorrect. Please try sending it again!";
                 }
-                else
+
+                if (DateTime.Now >= validEmail.Expiration)
                 {
-                    response = "Passcode is incorrect please try sending it again!";
+                    return "Passcode expired. Please try again!";
                 }
+
+                var emailRegistered = _context.User.Any(x => x.Email == user.Email);
+                if (emailRegistered)
+                {
+                    return "Email already registered.";
+                }
+
+                var hashedPassword = HashPassword(user.Password);
+                var newUser = new User
+                {
+                    Email = user.Email,
+                    LastName = user.LastName,
+                    Name = user.Name,
+                    Password = hashedPassword,
+                    Role = "User",
+                    Profile_Picture = null
+                };
+
+                _context.User.Add(newUser);
+                _context.SaveChanges();
+
+                return $"{user.Name}, you have successfully registered to our app!";
             }
             catch (Exception ex)
             {
-                return (ex.Message);
+                return $"An error occurred: {ex.Message}";
             }
-            return response;
         }
+
         public string HashPassword(string password)
         {
             string salt = BCrypt.Net.BCrypt.GenerateSalt();

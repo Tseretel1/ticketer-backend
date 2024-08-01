@@ -6,5 +6,6 @@ namespace Tickets_selling_App.User_Side_Response
     public class Client_Response
     {
         public string Message { get; set; }
+        public bool Success { get; set; }   
     }
 }

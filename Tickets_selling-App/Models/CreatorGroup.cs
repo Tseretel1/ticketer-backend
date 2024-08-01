@@ -9,5 +9,6 @@ namespace Tickets_selling_App.Models
         public string Logo { get; set; }
         public string Password { get; set; }
         public int CreatorID { get; set;}
+   
     }
 }

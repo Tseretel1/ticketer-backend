@@ -25,29 +25,76 @@ namespace Tickets_selling_App.Controllers
             try
             {
                 var userId = User.FindFirst("UserID")?.Value;
-                var CreatorRegistered = _creator.Register_as_Creator(creator, Convert.ToInt32(userId));
-                if (CreatorRegistered)
+                string personalid = creator.PersonalID.ToString();
+                string number = creator.PhoneNumber.ToString();
+
+                if (personalid.Length > 12) 
                 {
                     var message = new Client_Response
                     {
-                        Message = "We will check your Personal information and then Verify you",
+                        Message = "ID is incorrect, enter no more than 12 characters",
                     };
-                    return Ok(message);
+                    return BadRequest(message); 
+                }
+                else if (number.Length > 9)
+                {
+                    var message = new Client_Response
+                    {
+                        Message = "Number is incorrect, enter no more than 9 characters",
+                    };
+                    return BadRequest(message);
                 }
                 else
                 {
-                    var message = new Client_Response
+                    var CreatorRegistered = _creator.Register_as_Creator(creator, Convert.ToInt32(userId));
+                    if (CreatorRegistered)
                     {
-                        Message = "You are already registered, wait for admin to verify you!",
-                    };
-                    return Ok(message);
+                        var message = new Client_Response
+                        {
+                            Message = "We will check your Personal information and then Verify you",
+                            Success = false,
+                        };
+                        return Ok(message);
+                    }
+                    else
+                    {
+                        var message = new Client_Response
+                        {
+                            Message = "You are already registered, wait for admin to verify you!",
+                            Success = true,
+                        };
+                        return Ok(message);
+                    }
                 }
             }
             catch (Exception ex)
             {
-
+                var errorMessage = new Client_Response
+                {
+                    Message = "An error occurred: " + ex.Message,
+                };
+                return BadRequest(errorMessage); 
             }
-            return BadRequest();
+        }
+        [HttpGet("/CheckCreator")]
+        [Authorize(Policy = "UserOnly")]
+        public IActionResult CheckCreator()
+        {
+            var userId = User.FindFirst("UserID")?.Value;
+            var Creator = _creator.CheckCreator(Convert.ToInt32(userId));
+            if (Creator)
+            {
+                var message = new Client_Response
+                {
+                    Success = true,
+                };
+                return Ok(message);
+            }
+            var messages = new Client_Response
+            {
+                Success = false,
+            };
+            return Ok(messages);
         }
 
         [HttpPost("/Add New Tickets Creator")]

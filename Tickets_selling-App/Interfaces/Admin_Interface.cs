@@ -1,4 +1,5 @@
-﻿using Tickets_selling_App.Dtos.TicketDTO;
+﻿using Microsoft.AspNetCore.Mvc;
+using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App.Interfaces
@@ -7,5 +8,7 @@ namespace Tickets_selling_App.Interfaces
     {
         string AddTicket(CreateTicketDto ticket,int id);
         void DeleteTicket (int TicketId);
+        bool ApproveCreator(int id,bool Aprove);
+        ICollection<Creator> GetCreators();
     }
 }
