@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Tickets_selling_App.Dtos.TicketDTO;
-using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 
@@ -10,62 +11,167 @@ namespace Tickets_selling_App.Services
     public class CreatorService : CreatorInterface
     {
         private readonly Tkt_Dbcontext _context;
-
-        public CreatorService(Tkt_Dbcontext context)
+        private readonly IConfiguration _configuration;
+        public CreatorService(Tkt_Dbcontext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
-        public ICollection<GetTicketDto> GetMyTickets(int UserID)
+        //Registration____login 
+
+
+        public bool Creator_Account_Register(CreatorAccount acc,int userid)
         {
-            var Ticket = _context.Tickets.Where(x => x.PublisherID == UserID).ToList();
-            var TicketDTo = new List<GetTicketDto>();
-            foreach (var x in Ticket)
+            try
             {
-                var user = _context.User.FirstOrDefault(u => u.ID == UserID);
-                var Publisher = new CreatorDTO
+                var creator = _context.User.FirstOrDefault(x => x.ID == userid);
+                if (creator != null)
                 {
-                    Email = user.Email,
-                    LastName = user.LastName,
-                    Name = user.Name,
-                    Profile = user.Profile_Picture,
-                };
-                var TicketInstances = _context.TicketInstances.Where(t => t.Sold == false && t.TicketID == x.ID).Count();
-                GetTicketDto TicketD = new GetTicketDto()
+                    var AccountExists = _context.CreatorAccount.FirstOrDefault(x => x.UserName == acc.UserName);
+                    if (AccountExists == null) {
+                        var HashedPassword = HashPassword(acc.Password);
+                        var newAccount = new CreatorAccount
+                        {
+                            CreatorID = userid,
+                            Logo = acc.Logo,
+                            Password = HashedPassword,
+                            UserName = acc.UserName,
+                        };
+                        _context.CreatorAccount.Add(newAccount);
+                        _context.SaveChanges(); 
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                var account = _context.CreatorAccount.FirstOrDefault(x=>x.CreatorID == acc.CreatorID);
+                var Role = new CreatorAccountRoles()
                 {
-                    ID = x.ID,
-                    Activation_Date = x.Activation_Date,
-                    Description = x.Description,
-                    Expiration_Date = x.Expiration_Date,
-                    Genre = x.Genre,
-                    Photo = x.Photo,
-                    Price = x.Price,
-                    Title = x.Title,
-                    TicketCount = TicketInstances,
-                    Publisher = Publisher,
-                    ViewCount = x.ViewCount,
+                    AccountID = account.Id,
+                    Role = "CreatorAdmin",
+                    UserID = userid,
                 };
-                TicketDTo.Add(TicketD);
+                _context.AccountRoles.Add(Role);
+                _context.SaveChanges();
+                return true;
             }
-            return TicketDTo;
-        }
-        public UsersDTO GetMyProfile(int userid) 
-        {
-            var user = _context.User.FirstOrDefault(x => x.ID == userid);
-            if (user != null)
+            catch
             {
-                var FoundUser = new UsersDTO
+                return false;
+            }
+        }
+        public string HashPassword(string password)
+        {
+            string salt = BCrypt.Net.BCrypt.GenerateSalt();
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, salt);
+            return hashedPassword;
+        }
+
+
+
+        public string Creator_Account_Login(string username, string password, int userid)
+        {
+            var Account = _context.CreatorAccount.FirstOrDefault(u => u.UserName == username);
+            if (Account == null)
+            {
+                return null;
+            }
+
+            bool isPasswordCorrect = VerifyPassword(password, Account.Password);
+            if (!isPasswordCorrect)
+            {
+                return null;
+            }
+
+            var UserPermission = _context.AccountRoles.FirstOrDefault(x => x.UserID == userid && x.AccountID == Account.Id);
+            if (UserPermission == null)
+            {
+                return null;
+            }
+
+            var Token = AccountRoleToken(UserPermission);
+            return Token;
+        }
+
+        public bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+        }
+
+        public string AccountRoleToken(CreatorAccountRoles acc)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim("AccountID" , acc.AccountID.ToString()),
+                new Claim("UserID" , acc.UserID.ToString()),
+                new Claim(ClaimTypes.Role, acc.Role),
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddDays(1),
+                SigningCredentials = creds
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
+        }
+
+        //  ---------------------Services --------------------------
+        public ICollection<GetTicketDto> GetMyTickets(int AccountID)
+        {
+            var query = from ticket in _context.Tickets
+                        join creator in _context.CreatorAccount
+                        on ticket.PublisherID equals creator.Id
+                        let ticketInstancesCount = _context.TicketInstances.Count(ti => ti.Sold == false && ti.TicketID == ticket.ID)
+                        where ticket.PublisherID == AccountID 
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            TicketCount = ticketInstancesCount,
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                        };
+
+            return query.ToList();
+        }
+
+        public CreatorAccount GetMyProfile(int AccountID) 
+        {
+            var acc = _context.CreatorAccount.FirstOrDefault(x => x.Id == 8);
+            if (acc != null)
+            {
+                var FoundAccount = new CreatorAccount
                 {
-                    Name = user.Name,
-                    Email = user.Email,
-                    LastName = user.LastName,
-                    UserRole = user.Role,
-                    Profile_Picture = user.Profile_Picture,
+                    Logo = acc.Logo,
+                    UserName = acc.UserName,
                 };
-                return FoundUser;
+                return FoundAccount;
             }       
             return null;
         }
+
+
+        //ticket crud
         public string AddTicket(CreateTicketDto ticket, int id)
         {
             string response = "";
@@ -88,6 +194,7 @@ namespace Tickets_selling_App.Services
 
                     _context.Tickets.Add(newTicket);
                     _context.SaveChanges();
+
 
                     for (var i = 1; i <= ticket.TicketCount; i++)
                     {
@@ -122,33 +229,26 @@ namespace Tickets_selling_App.Services
             }
         }
 
-        public bool Register_as_Creator(Creator Creator,int id)
+
+
+
+
+        //Managment services
+        public List<Ticket> MostViewed(int id)
         {
-            var Registered = _context.Creator.FirstOrDefault(x=>x.UserID == id ||  x.PersonalID == Creator.PersonalID);
-            if(Registered == null)
+            List<Ticket> MostViewedTickets = new List<Ticket>();
+            var tickets = _context.Tickets.Where(x => x.PublisherID == id).ToList();
+
+            if (tickets != null && tickets.Any())
             {
-                var Newcreator = new Creator
-                {
-                    IdCardPhoto = Creator.IdCardPhoto,
-                    PersonalID = Creator.PersonalID,
-                    PhoneNumber = Creator.PhoneNumber,
-                    UserID = id,
-                    Verified = false,
-                };
-                _context.Creator.Add(Newcreator);
-                _context.SaveChanges();
-                return true;
+                MostViewedTickets = tickets
+                    .OrderByDescending(t => t.ViewCount)
+                    .Take(5)
+                    .ToList();
+                return MostViewedTickets;
             }
-            return false;
+            return null;
         }
-        public bool CheckCreator(int id)
-        {
-            var Creator = _context.Creator.FirstOrDefault(x => x.UserID == id);
-            if (Creator != null)
-            {
-                return true;
-            }
-            return false;
-        }
+
     }
 }

@@ -1,5 +1,4 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Tickets_selling_App.Dtos.TicketDTO;
@@ -66,46 +65,6 @@ namespace Tickets_selling_App.Controllers
             {
                 return BadRequest("Something went wrong! " + ex.Message);
             }
-        }
-        [HttpPost("/Approve Creator")]
-        public IActionResult AproveCreator(int id,bool aproved)
-        {
-            try
-            {
-                var Creator = _admin.ApproveCreator(id, aproved);
-                if (Creator)
-                {
-                    var Message = new Client_Response
-                    {
-                        Message = "Admin verified you and Approved!",
-                    };
-                    return Ok(Message);
-                }
-                else
-                {
-                    var Message = new Client_Response
-                    {
-                        Message = "Admin rejected your request to become Creator!",
-                    };
-                    return Ok(Message);
-                }
-                return NotFound();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-
-        }
-        [HttpGet("/Get every Creator")]
-        public IActionResult GetCreators()
-        {
-            var Creator = _admin.GetCreators();
-            if (Creator != null)
-            {
-                return Ok(Creator);
-            }
-            return NotFound();
         }
     }
 }

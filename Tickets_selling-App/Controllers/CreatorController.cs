@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using System.Reflection.Metadata;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
@@ -9,6 +9,8 @@ using Tickets_selling_App.User_Side_Response;
 
 namespace Tickets_selling_App.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class CreatorController : Controller
     {
         private readonly CreatorInterface _creator;
@@ -16,89 +18,72 @@ namespace Tickets_selling_App.Controllers
         {
             _creator = admin;
         }
-
-        [HttpPost("/Register As creator")]
-        [Authorize(Policy = "UserOnly")]
-
-        public IActionResult RegisterAsCreator([FromBody] Creator creator)
+      
+        [HttpGet("creator-account-registration")]
+        [Authorize(Policy = "CreatorOnly")]
+        public IActionResult Creator_account_Registration(CreatorAccount acc)
         {
             try
             {
                 var userId = User.FindFirst("UserID")?.Value;
-                string personalid = creator.PersonalID.ToString();
-                string number = creator.PhoneNumber.ToString();
-
-                if (personalid.Length > 12) 
+                var creatoraccount = _creator.Creator_Account_Register(acc,Convert.ToInt32(userId));
+                if (creatoraccount)
                 {
-                    var message = new Client_Response
+                    var response = new Client_Response
                     {
-                        Message = "ID is incorrect, enter no more than 12 characters",
+                        Message = "you Created account successfully",
+                        Success = true,
                     };
-                    return BadRequest(message); 
-                }
-                else if (number.Length > 9)
-                {
-                    var message = new Client_Response
-                    {
-                        Message = "Number is incorrect, enter no more than 9 characters",
-                    };
-                    return BadRequest(message);
+                    return Ok(response);
                 }
                 else
                 {
-                    var CreatorRegistered = _creator.Register_as_Creator(creator, Convert.ToInt32(userId));
-                    if (CreatorRegistered)
+                    return BadRequest();
+                }
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);  
+            }
+            return BadRequest();    
+        }
+        [HttpGet("creator-account-login")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult Creator_Account_Login(string username, string password)
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var checkCredentials = _creator.Creator_Account_Login(username,password,78);
+                if (checkCredentials != null)
+                {
+                    var ReturToken = new Client_Response
                     {
-                        var message = new Client_Response
-                        {
-                            Message = "We will check your Personal information and then Verify you",
-                            Success = false,
-                        };
-                        return Ok(message);
-                    }
-                    else
+                        Message = checkCredentials,
+                        Success = true,
+                    };
+                    return Ok(ReturToken);
+                }
+                else
+                {
+
+                    var response = new Client_Response
                     {
-                        var message = new Client_Response
-                        {
-                            Message = "You are already registered, wait for admin to verify you!",
-                            Success = true,
-                        };
-                        return Ok(message);
-                    }
+                        Message = "Username or password is incorrect!",
+                        Success = false,
+                    };
+                    return NotFound(response);
                 }
             }
             catch (Exception ex)
             {
-                var errorMessage = new Client_Response
-                {
-                    Message = "An error occurred: " + ex.Message,
-                };
-                return BadRequest(errorMessage); 
+                return BadRequest(ex.Message);
             }
-        }
-        [HttpGet("/CheckCreator")]
-        [Authorize(Policy = "UserOnly")]
-        public IActionResult CheckCreator()
-        {
-            var userId = User.FindFirst("UserID")?.Value;
-            var Creator = _creator.CheckCreator(Convert.ToInt32(userId));
-            if (Creator)
-            {
-                var message = new Client_Response
-                {
-                    Success = true,
-                };
-                return Ok(message);
-            }
-            var messages = new Client_Response
-            {
-                Success = false,
-            };
-            return Ok(messages);
         }
 
-        [HttpPost("/Add New Tickets Creator")]
-        [Authorize(Policy = "CreatorOnly")]
+
+        [HttpPost("add-new-tickets")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult AddTicket([FromBody] CreateTicketDto ticket)
         {
             try
@@ -115,10 +100,10 @@ namespace Tickets_selling_App.Controllers
                 }
                 else
                 {
-                    if (ticket.TicketCount<=250)
+                    if (ticket.TicketCount <= 250)
                     {
-                        var userId = User.FindFirst("UserID")?.Value;
-                        string response = _creator.AddTicket(ticket, Convert.ToInt32(userId));
+                        var AccountID = User.FindFirst("AccountID")?.Value;
+                        string response = _creator.AddTicket(ticket, Convert.ToInt32(AccountID));
                         Response = response;
                     }
                     else
@@ -133,11 +118,11 @@ namespace Tickets_selling_App.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-        [HttpGet("/My Tickets")]
-        [Authorize(Policy = "CreatorOnly")]
+        [HttpGet("my-tickets")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult Mytickets()
         {
-            var userId = User.FindFirst("UserID")?.Value;
+            var userId = User.FindFirst("AccountID")?.Value;
             var MyTickets = _creator.GetMyTickets(Convert.ToInt32(userId));
             if(MyTickets != null)
             {
@@ -147,12 +132,12 @@ namespace Tickets_selling_App.Controllers
         }
 
 
-        [HttpGet("/My Profile")]
-        [Authorize(Policy = "CreatorOnly")]
+        [HttpGet("my-profile")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult MyProfile()
         {
-            var userId = User.FindFirst("UserID")?.Value;
-            var MyTickets = _creator.GetMyProfile(Convert.ToInt32(userId));
+            var AccountID = User.FindFirst("AccountID")?.Value;
+            var MyTickets = _creator.GetMyProfile(Convert.ToInt32(AccountID));
             if (MyTickets != null)
             {
                 return Ok(MyTickets);
@@ -161,7 +146,7 @@ namespace Tickets_selling_App.Controllers
         }
 
 
-        [HttpDelete("/DeleteTickets Creator")]
+        [HttpDelete("delete-tickets")]
         [Authorize(Policy = "CreatorOnly")]
         public IActionResult Delete_Ticket([FromBody] int id)
         {
@@ -174,6 +159,19 @@ namespace Tickets_selling_App.Controllers
             {
                 return BadRequest("Something went wrong! " + ex.Message);
             }
+        }
+
+
+
+        [HttpGet("most-viewed-tickets")]
+        public IActionResult MostViewed(int id)
+        {
+            var tickets = _creator.MostViewed(id);
+            if(tickets != null)
+            {
+                return Ok(tickets);
+            }
+            return Ok();
         }
 
     }

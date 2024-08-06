@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tickets_selling_App;
 
@@ -11,9 +12,11 @@ using Tickets_selling_App;
 namespace Tickets_selling_App.Migrations
 {
     [DbContext(typeof(Tkt_Dbcontext))]
-    partial class Tkt_DbcontextModelSnapshot : ModelSnapshot
+    [Migration("20240802115505_Creator roles")]
+    partial class Creatorroles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,7 +25,36 @@ namespace Tickets_selling_App.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Tickets_selling_App.Models.CreatorAccount", b =>
+            modelBuilder.Entity("Tickets_selling_App.Models.Creator", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
+
+                    b.Property<string>("IdCardPhoto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("PersonalID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PhoneNumber")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Verified")
+                        .HasColumnType("bit");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Creator");
+                });
+
+            modelBuilder.Entity("Tickets_selling_App.Models.CreatorGroup", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,30 +79,7 @@ namespace Tickets_selling_App.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CreatorAccount");
-                });
-
-            modelBuilder.Entity("Tickets_selling_App.Models.CreatorAccountRoles", b =>
-                {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<int>("AccountID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
-                    b.HasKey("id");
-
-                    b.ToTable("AccountRoles");
+                    b.ToTable("CreatorGroup");
                 });
 
             modelBuilder.Entity("Tickets_selling_App.Models.Email_Validation", b =>
@@ -94,6 +103,36 @@ namespace Tickets_selling_App.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Emailvalidation");
+                });
+
+            modelBuilder.Entity("Tickets_selling_App.Models.GroupRoles", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+
+                    b.Property<int>("CreatorID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GroupID")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("creatorGroupId")
+                        .HasColumnType("int");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("CreatorID");
+
+                    b.HasIndex("creatorGroupId");
+
+                    b.ToTable("GroupRoles");
                 });
 
             modelBuilder.Entity("Tickets_selling_App.Models.PasswordReset", b =>
@@ -196,10 +235,6 @@ namespace Tickets_selling_App.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("IdCardPhoto")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -212,12 +247,6 @@ namespace Tickets_selling_App.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("PersonalID")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("PhoneNumber")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Profile_Picture")
                         .HasColumnType("nvarchar(max)");
 
@@ -228,6 +257,25 @@ namespace Tickets_selling_App.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("User");
+                });
+
+            modelBuilder.Entity("Tickets_selling_App.Models.GroupRoles", b =>
+                {
+                    b.HasOne("Tickets_selling_App.Models.Creator", "creator")
+                        .WithMany()
+                        .HasForeignKey("CreatorID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tickets_selling_App.Models.CreatorGroup", "creatorGroup")
+                        .WithMany()
+                        .HasForeignKey("creatorGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("creator");
+
+                    b.Navigation("creatorGroup");
                 });
 #pragma warning restore 612, 618
         }

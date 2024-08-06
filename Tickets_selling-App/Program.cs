@@ -31,8 +31,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Configure Authorization Policies
 builder.Services.AddAuthorization(options =>
 {
+    //User roles 
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
     options.AddPolicy("UserOnly", policy => policy.RequireRole("User"));
+
+    //Creator Roles
+    options.AddPolicy("EveryRole", policy => policy.RequireAssertion(context =>
+        context.User.IsInRole("Creator") ||
+        context.User.IsInRole("Moderator") ||
+        context.User.IsInRole("CreatorAdmin") ||
+        context.User.IsInRole("User") 
+    ));
+    options.AddPolicy("CreatorAdminOnly", policy => policy.RequireRole("CreatorAdmin"));
+    options.AddPolicy("ModeratorOnly", policy => policy.RequireRole("Moderator"));
     options.AddPolicy("CreatorOnly", policy => policy.RequireRole("Creator"));
 });
 

@@ -8,7 +8,5 @@ namespace Tickets_selling_App.Interfaces
     {
         string AddTicket(CreateTicketDto ticket,int id);
         void DeleteTicket (int TicketId);
-        bool ApproveCreator(int id,bool Aprove);
-        ICollection<Creator> GetCreators();
     }
 }

@@ -68,36 +68,5 @@ namespace Tickets_selling_App.Services
                 _context.SaveChanges();
             }
         }
-        public bool ApproveCreator(int id, bool aprove)
-        {
-            var Creator = _context.Creator.FirstOrDefault(x => x.ID == id);
-            if (aprove)
-            {
-                if(Creator != null) 
-                {
-                    Creator.Verified = true;
-                    var user = _context.User.FirstOrDefault(x=>x.ID == Creator.UserID);
-                    if (user != null)
-                    {
-                        user.Role = "Creator";
-                        _context.SaveChanges();
-                        return true;
-                    }
-                }
-            }
-            else if(aprove == false)
-            {
-                _context.Creator.Remove(Creator);
-                _context.SaveChanges();
-                return false;
-            }
-            return false;
-        }
-
-        public ICollection<Creator> GetCreators()
-        {
-            var creators = _context.Creator.Where(x => x.Verified == false).ToList();
-            return creators;
-        }
     }
 }
