@@ -12,8 +12,8 @@ namespace Tickets_selling_App.Models
         public string Password { get; set; }
         public string? Profile_Picture { get; set; }
         public string Role { get; set; }
-        public long PersonalID { get; set; }
-        public long PhoneNumber { get; set; }
-        public string IdCardPhoto { get; set; }
+        public long? PersonalID { get; set; }
+        public long? PhoneNumber { get; set; }
+        public long? IdCardPhoto { get; set; }
     }
 }

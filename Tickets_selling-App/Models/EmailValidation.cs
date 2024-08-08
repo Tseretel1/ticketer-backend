@@ -1,6 +1,6 @@
 ﻿namespace Tickets_selling_App.Models
 {
-    public class Email_Validation
+    public class EmailValidation
     {
         public int id { get; set; }
         public string Email { get; set; }

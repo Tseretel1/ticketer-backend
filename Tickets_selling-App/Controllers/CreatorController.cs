@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using System.Reflection.Metadata;
+using Tickets_selling_App.Dtos.Creator;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
@@ -18,8 +19,40 @@ namespace Tickets_selling_App.Controllers
         {
             _creator = admin;
         }
-      
-        [HttpGet("creator-account-registration")]
+        [HttpPost("/register-as-creator")]
+        [Authorize(Policy = "UserOnly")]
+        public IActionResult register_as_Creator(RegisterAsCreatorDTO cred)
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var register = _creator.register_as_creator(Convert.ToInt32(userId), cred);
+                if (register)
+                {
+                    var message = new Client_Response
+                    {
+                        Message = "Admin will check and verify you!",
+                        Success = true,
+                    };
+                    return Ok(message);
+                }
+                else
+                {
+                    var message = new Client_Response
+                    {
+                        Message = "You are already registered, wait for admin to verify you!",
+                        Success = false,
+                    };
+                    return Ok(message);
+                }
+            }catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        [HttpGet("/creator-account-registration")]
         [Authorize(Policy = "CreatorOnly")]
         public IActionResult Creator_account_Registration(CreatorAccount acc)
         {
@@ -45,9 +78,8 @@ namespace Tickets_selling_App.Controllers
             {
                 return BadRequest(ex.Message);  
             }
-            return BadRequest();    
         }
-        [HttpGet("creator-account-login")]
+        [HttpGet("/creator-account-login")]
         [Authorize(Policy = "EveryRole")]
         public IActionResult Creator_Account_Login(string username, string password)
         {
@@ -137,7 +169,8 @@ namespace Tickets_selling_App.Controllers
         public IActionResult MyProfile()
         {
             var AccountID = User.FindFirst("AccountID")?.Value;
-            var MyTickets = _creator.GetMyProfile(Convert.ToInt32(AccountID));
+            var userid = User.FindFirst("UserID")?.Value;
+            var MyTickets = _creator.GetMyProfile(Convert.ToInt32(AccountID),Convert.ToInt32(userid));
             if (MyTickets != null)
             {
                 return Ok(MyTickets);

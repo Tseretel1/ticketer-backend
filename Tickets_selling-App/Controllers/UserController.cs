@@ -118,16 +118,17 @@ namespace Tickets_selling_App.Controllers
                 var ReturToken = new Client_Response
                 {
                     Message = token,
+                    Success = true
                 };
                 return Ok(ReturToken);
             }
             else
             {
-                var ReturToken = new Client_Response
+                var incorrect = new Client_Response
                 {
                     Message = "Email or Password is incorrect!",
                 };
-                return NotFound(ReturToken);
+                return NotFound(incorrect);
             }
         }
     }

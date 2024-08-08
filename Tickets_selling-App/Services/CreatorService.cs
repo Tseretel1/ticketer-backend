@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Tickets_selling_App.Dtos.Creator;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
@@ -18,8 +19,41 @@ namespace Tickets_selling_App.Services
             _configuration = configuration;
         }
 
-        //Registration____login 
+        //Registration____login   
+        public bool register_as_creator(int userid, RegisterAsCreatorDTO cred)
+        {
+            bool happens = false;
+            var user = _context.User.FirstOrDefault(x => x.ID == userid);
 
+            if (user != null)
+            {
+                if (cred.IdCardPhoto != null && cred.PhoneNumber != null && cred.PersonalID != null)
+                {
+                    user.PersonalID = cred.PersonalID;
+                    user.PhoneNumber = cred.PhoneNumber;
+                    user.IdCardPhoto = cred.IdCardPhoto;
+                    _context.SaveChanges();
+                    happens = true;
+                }
+                if (happens)
+                {
+                    var alreadyRegistered = _context.CreatorValidation.FirstOrDefault(x=>x.ID == userid);
+                    if (alreadyRegistered != null)
+                    {
+                        var CreatorValidation = new CreatorValidation()
+                        {
+                            Userid = userid,
+                            Verified = false,
+                        };
+
+                        _context.CreatorValidation.Add(CreatorValidation);
+                        _context.SaveChanges();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 
         public bool Creator_Account_Register(CreatorAccount acc,int userid)
         {
@@ -155,20 +189,29 @@ namespace Tickets_selling_App.Services
             return query.ToList();
         }
 
-        public CreatorAccount GetMyProfile(int AccountID) 
+        public object GetMyProfile(int AccountID, int userid)
         {
-            var acc = _context.CreatorAccount.FirstOrDefault(x => x.Id == 8);
-            if (acc != null)
+            var acc = _context.CreatorAccount.FirstOrDefault(x => x.Id == AccountID);
+            var user = _context.User.FirstOrDefault(x => x.ID == userid);
+            var role = _context.AccountRoles.FirstOrDefault(x => x.AccountID == AccountID && x.UserID == userid);
+            if (acc != null && user != null && role !=null)
             {
-                var FoundAccount = new CreatorAccount
+                var combinedProfile = new
                 {
                     Logo = acc.Logo,
                     UserName = acc.UserName,
+                    Name = user.Name,
+                    LastName = user.LastName,
+                    Profile = user.Profile_Picture,
+                    UserRole = role.Role,
                 };
-                return FoundAccount;
-            }       
+
+                return combinedProfile;
+            }
+
             return null;
         }
+
 
 
         //ticket crud
@@ -249,6 +292,5 @@ namespace Tickets_selling_App.Services
             }
             return null;
         }
-
     }
 }

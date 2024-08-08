@@ -151,7 +151,7 @@ namespace Tickets_selling_App.Services
                     }
                     else
                     {
-                        var ValidateEmail = new Email_Validation
+                        var ValidateEmail = new EmailValidation
                         {
                             Email = Email,
                             Passcode = passcode,
