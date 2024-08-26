@@ -208,7 +208,6 @@ namespace Tickets_selling_App.Services
 
                 return combinedProfile;
             }
-
             return null;
         }
 

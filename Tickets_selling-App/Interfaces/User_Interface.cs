@@ -12,5 +12,7 @@ namespace Tickets_selling_App.Interfaces
         string Registration(RegistrationDTO user, int passcode);
         string CreateToken(User user);
         User Login(LoginDto user);
+        object Profile(int userid);
+        string Buy_Ticket(int UserID, int ticketid);
     }
 }

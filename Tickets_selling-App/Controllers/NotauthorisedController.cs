@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Migrations;
 
@@ -30,6 +31,17 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong {ex.Message}");
             }
         }
+        [HttpGet("/matching-ticket/{ticketId}")]
+        public ActionResult<GetTicketDto> GetMatchingTicket(int ticketId)
+        {
+            var result = _notAuth.MatchingTicket(ticketId);
+            if (result == null || !result.Any())
+            {
+                return NotFound();
+            }
+            return Ok(result);
+        }
+
 
         [HttpGet("/Popular Events")]
         public IActionResult PopularEvents()

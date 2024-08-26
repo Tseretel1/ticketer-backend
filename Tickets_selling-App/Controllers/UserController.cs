@@ -1,8 +1,11 @@
 ﻿using Azure;
+using Hangfire.States;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tickets_selling_App.Dtos;
 using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Interfaces;
+using Tickets_selling_App.Migrations;
 using Tickets_selling_App.Models;
 using Tickets_selling_App.User_Side_Response;
 
@@ -49,7 +52,23 @@ namespace Tickets_selling_App.Controllers
             }
         }
 
-
+        [HttpGet("/user-profile")]
+        [Authorize(Policy = "EveryRole2")]
+        public IActionResult MyProfile()
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var Customer = _User.Profile(Convert.ToInt32(userId));
+                if (Customer == null)
+                    return NotFound("User not Found");
+                return Ok(Customer);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
         //________________________Login Registration servicres
 
         [HttpPost("/Registration Validation")]
@@ -131,5 +150,48 @@ namespace Tickets_selling_App.Controllers
                 return NotFound(incorrect);
             }
         }
+
+
+        //Buy Ticket 
+        [HttpPost("/buy-ticket")]
+        [Authorize(Policy = "EveryRole2")]
+        public IActionResult BuyTicket([FromBody] TicketRequest request)
+        {
+            if (request == null || request.TicketId <= 0)
+            {
+                return BadRequest("Invalid ticket ID.");
+            }
+
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized("User ID not found.");
+                }
+
+                string successMessage = _User.Buy_Ticket(Convert.ToInt32(userId), request.TicketId);
+                if (!string.IsNullOrEmpty(successMessage))
+                {
+                    var message = new Client_Response
+                    {
+                        Message = successMessage,
+                    };
+                    return Ok(message);
+                }
+
+                return BadRequest("Ticket purchase failed.");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception details here
+                return StatusCode(500, "Internal server error.");
+            }
+        }
+        public class TicketRequest
+        {
+            public int TicketId { get; set; }
+        }
+
     }
 }

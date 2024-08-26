@@ -41,6 +41,13 @@ builder.Services.AddAuthorization(options =>
         context.User.IsInRole("Moderator") ||
         context.User.IsInRole("CreatorAdmin")
     ));
+    options.AddPolicy("EveryRole2", policy => policy.RequireAssertion(context =>
+     context.User.IsInRole("Creator") ||
+     context.User.IsInRole("Moderator") ||
+     context.User.IsInRole("User") ||
+     context.User.IsInRole("CreatorAdmin")
+
+    ));
     options.AddPolicy("CreatorAdminOnly", policy => policy.RequireRole("CreatorAdmin"));
     options.AddPolicy("ModeratorOnly", policy => policy.RequireRole("Moderator"));
     options.AddPolicy("CreatorOnly", policy => policy.RequireRole("Creator"));

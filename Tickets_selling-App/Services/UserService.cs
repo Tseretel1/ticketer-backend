@@ -5,6 +5,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Tickets_selling_App.Dtos.User;
+using Microsoft.Identity.Client;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Tickets_selling_App.Services
 {
@@ -265,5 +267,63 @@ namespace Tickets_selling_App.Services
 
             return tokenHandler.WriteToken(token);
         }
+
+        public object Profile(int userid)
+        {
+            var user = _context.User.FirstOrDefault(x => x.ID == userid);
+            if (user != null)
+            {
+                var Profile = new
+                {
+                    Name = user.Name,
+                    LastName = user.LastName,
+                    Profile = user.Profile_Picture,
+                };
+
+                return Profile;
+            }
+            return null;
+        }
+
+        //Buy Ticket 
+        public string Buy_Ticket(int userId, int ticketId)
+        {
+            var user = _context.User.FirstOrDefault(x => x.ID == userId);
+            var ticket = _context.Tickets.FirstOrDefault(x => x.ID == ticketId);
+
+            if (user == null)
+            {
+                return "User not found.";
+            }
+
+            if (ticket == null)
+            {
+                return "Ticket not found.";
+            }
+
+            var ticketInstance = _context.TicketInstances
+                .FirstOrDefault(x => x.TicketID == ticketId && x.Sold == false);
+
+            if (ticketInstance == null)
+            {
+                return "No available ticket instances.";
+            }
+
+            ticketInstance.Sold = true;
+            _context.SaveChanges();
+
+            var soldTicket = new SoldTickets
+            {
+                TicketID = ticketId,
+                UniqueTicketID = ticketInstance.UniqueID,
+                UserID = userId,
+            };
+
+            _context.SoldTickets.Add(soldTicket);
+            _context.SaveChanges();
+
+            return "Ticket purchased successfully!";
+        }
+
     }
 }

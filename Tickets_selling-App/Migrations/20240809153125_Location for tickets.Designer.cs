@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tickets_selling_App;
 
@@ -11,9 +12,11 @@ using Tickets_selling_App;
 namespace Tickets_selling_App.Migrations
 {
     [DbContext(typeof(Tkt_Dbcontext))]
-    partial class Tkt_DbcontextModelSnapshot : ModelSnapshot
+    [Migration("20240809153125_Location for tickets")]
+    partial class Locationfortickets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -137,33 +140,6 @@ namespace Tickets_selling_App.Migrations
                     b.ToTable("PasswordReset");
                 });
 
-            modelBuilder.Entity("Tickets_selling_App.Models.SoldTickets", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ID"));
-
-                    b.Property<int>("TicketID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UniqueTicketID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("int");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("TicketID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("SoldTickets");
-                });
-
             modelBuilder.Entity("Tickets_selling_App.Models.Ticket", b =>
                 {
                     b.Property<int>("ID")
@@ -182,6 +158,10 @@ namespace Tickets_selling_App.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Genre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Location")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -273,35 +253,6 @@ namespace Tickets_selling_App.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("User");
-                });
-
-            modelBuilder.Entity("Tickets_selling_App.Models.SoldTickets", b =>
-                {
-                    b.HasOne("Tickets_selling_App.Models.Ticket", "Ticket")
-                        .WithMany("solditcket")
-                        .HasForeignKey("TicketID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Tickets_selling_App.Models.User", "user")
-                        .WithMany("Soldtickets")
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ticket");
-
-                    b.Navigation("user");
-                });
-
-            modelBuilder.Entity("Tickets_selling_App.Models.Ticket", b =>
-                {
-                    b.Navigation("solditcket");
-                });
-
-            modelBuilder.Entity("Tickets_selling_App.Models.User", b =>
-                {
-                    b.Navigation("Soldtickets");
                 });
 #pragma warning restore 612, 618
         }

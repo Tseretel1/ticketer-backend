@@ -86,7 +86,7 @@ namespace Tickets_selling_App.Controllers
             try
             {
                 var userId = User.FindFirst("UserID")?.Value;
-                var checkCredentials = _creator.Creator_Account_Login(username,password,78);
+                var checkCredentials = _creator.Creator_Account_Login(username,password, Convert.ToInt32(userId));
                 if (checkCredentials != null)
                 {
                     var ReturToken = new Client_Response
@@ -180,7 +180,7 @@ namespace Tickets_selling_App.Controllers
 
 
         [HttpDelete("delete-tickets")]
-        [Authorize(Policy = "CreatorOnly")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult Delete_Ticket([FromBody] int id)
         {
             try
