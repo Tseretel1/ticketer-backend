@@ -12,7 +12,6 @@ namespace Tickets_selling_App
         }
         public DbSet<User> User { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
-        public DbSet<TicketInstance> TicketInstances { get; set; }
         public DbSet<SoldTickets>SoldTickets { get; set; }  
         public DbSet<PasswordReset> PasswordReset { get; set; }
         public DbSet<EmailValidation> Emailvalidation { get; set; }

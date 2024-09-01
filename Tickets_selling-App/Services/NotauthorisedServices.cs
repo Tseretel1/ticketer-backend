@@ -13,9 +13,10 @@ namespace Tickets_selling_App.Services
         }
         public ICollection<GetTicketDto> GetAll_Tickets()
         {
-            var query = from ticket in _context.Tickets.Where(x=>x.Expiration_Date > DateTime.Now)
+            var query = from ticket in _context.Tickets
                         join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
-                        let ticketInstancesCount = _context.TicketInstances.Count(ti => ti.Sold == false && ti.TicketID == ticket.ID)
+                        join soldTickets in _context.SoldTickets
+                            on ticket.ID equals soldTickets.TicketID into soldTicketGroup
                         select new GetTicketDto
                         {
                             ID = ticket.ID,
@@ -26,7 +27,8 @@ namespace Tickets_selling_App.Services
                             Photo = ticket.Photo,
                             Price = ticket.Price,
                             Title = ticket.Title,
-                            TicketCount = ticketInstancesCount,
+                            TicketCount = ticket.TicketCount,
+                            sold = soldTicketGroup.Count(),
                             Publisher = new CreatorAccountDTO
                             {
                                 UserName = creator.UserName,
@@ -36,8 +38,13 @@ namespace Tickets_selling_App.Services
                             ViewCount = ticket.ViewCount,
                         };
 
-            return query.ToList();
+            var sortedQuery = query.OrderByDescending(t => t.Activation_Date);
+
+            return sortedQuery.ToList();
         }
+
+
+
         public ICollection<GetTicketDto> MatchingTicket(int ticketid)
         {
             var targetTicket = _context.Tickets.FirstOrDefault(t => t.ID == ticketid);
@@ -58,7 +65,7 @@ namespace Tickets_selling_App.Services
                                             Photo = ticket.Photo,
                                             Price = ticket.Price,
                                             Title = ticket.Title,
-                                            TicketCount = _context.TicketInstances.Count(ti => ti.Sold == false && ti.TicketID == ticket.ID),
+                                            TicketCount = ticket.TicketCount,
                                             Publisher = new CreatorAccountDTO
                                             {
                                                 UserName = creator.UserName,
@@ -102,7 +109,6 @@ namespace Tickets_selling_App.Services
         {
             var query = from ticket in _context.Tickets
                         join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
-                        let ticketInstancesCount = _context.TicketInstances.Count(ti => ti.Sold == false && ti.TicketID == ticket.ID)
                         select new GetTicketDto
                         {
                             ID = ticket.ID,
@@ -113,7 +119,6 @@ namespace Tickets_selling_App.Services
                             Photo = ticket.Photo,
                             Price = ticket.Price,
                             Title = ticket.Title,
-                            TicketCount = ticketInstancesCount,
                             Publisher = new CreatorAccountDTO
                             {
                                 UserName = creator.UserName,

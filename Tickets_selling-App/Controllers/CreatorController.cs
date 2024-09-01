@@ -19,6 +19,7 @@ namespace Tickets_selling_App.Controllers
         {
             _creator = admin;
         }
+
         [HttpPost("/register-as-creator")]
         [Authorize(Policy = "UserOnly")]
         public IActionResult register_as_Creator(RegisterAsCreatorDTO cred)
@@ -132,16 +133,9 @@ namespace Tickets_selling_App.Controllers
                 }
                 else
                 {
-                    if (ticket.TicketCount <= 250)
-                    {
-                        var AccountID = User.FindFirst("AccountID")?.Value;
-                        string response = _creator.AddTicket(ticket, Convert.ToInt32(AccountID));
-                        Response = response;
-                    }
-                    else
-                    {
-                        Response = "You cant Create more than 250 Ticket at once!";
-                    }
+                   var AccountID = User.FindFirst("AccountID")?.Value;
+                   string response = _creator.AddTicket(ticket, Convert.ToInt32(AccountID));
+                   Response = response;
                 }
                 return Ok(new { message = Response });
             }
@@ -150,6 +144,19 @@ namespace Tickets_selling_App.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+        [HttpGet("matching-ticket/{ticketId}")]
+        [Authorize(Policy = "EveryRole")]
+        public ActionResult<GetTicketDto> GetMatchingTicket(int ticketId)
+        {
+            var result = _creator.MatchingTicket(ticketId);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
+        }
+
+
         [HttpGet("my-tickets")]
         [Authorize(Policy = "EveryRole")]
         public IActionResult Mytickets()
@@ -193,8 +200,6 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest("Something went wrong! " + ex.Message);
             }
         }
-
-
 
         [HttpGet("most-viewed-tickets")]
         public IActionResult MostViewed(int id)

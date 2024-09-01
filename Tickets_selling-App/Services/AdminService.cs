@@ -36,18 +36,6 @@ namespace Tickets_selling_App.Services
 
                     _context.Tickets.Add(newTicket);
                     _context.SaveChanges();
-
-                    for (var i = 1; i <= ticket.TicketCount; i++)
-                    {
-                        var instances = new TicketInstance
-                        {
-                            Sold = false,
-                            TicketID = newTicket.ID,
-                            UniqueID = Guid.NewGuid().ToString(),
-                        };
-                        _context.TicketInstances.Add(instances);
-                    }
-                    _context.SaveChanges();
                     response = "Tickets have been added successfully";
                 }
             }
@@ -62,8 +50,6 @@ namespace Tickets_selling_App.Services
             var TicketToDelete = _context.Tickets.FirstOrDefault(x=>x.ID == TicketId);
             if (TicketToDelete != null)
             {
-                var instancesToDelete = _context.TicketInstances.Where(x => x.TicketID == TicketToDelete.ID);
-                _context.TicketInstances.RemoveRange(instancesToDelete);
                 _context.Tickets.Remove(TicketToDelete);
                 _context.SaveChanges();
             }

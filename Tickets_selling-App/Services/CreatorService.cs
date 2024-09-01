@@ -165,8 +165,9 @@ namespace Tickets_selling_App.Services
             var query = from ticket in _context.Tickets
                         join creator in _context.CreatorAccount
                         on ticket.PublisherID equals creator.Id
-                        let ticketInstancesCount = _context.TicketInstances.Count(ti => ti.Sold == false && ti.TicketID == ticket.ID)
-                        where ticket.PublisherID == AccountID 
+                        where ticket.PublisherID == AccountID
+                        let SoldTicketCount = _context.SoldTickets.Count(ti => ti.TicketID == ticket.ID)
+                        where ticket.PublisherID == AccountID
                         select new GetTicketDto
                         {
                             ID = ticket.ID,
@@ -177,7 +178,7 @@ namespace Tickets_selling_App.Services
                             Photo = ticket.Photo,
                             Price = ticket.Price,
                             Title = ticket.Title,
-                            TicketCount = ticketInstancesCount,
+                            sold = SoldTicketCount,
                             Publisher = new CreatorAccountDTO
                             {
                                 UserName = creator.UserName,
@@ -232,22 +233,10 @@ namespace Tickets_selling_App.Services
                         Photo = ticket.Photo,
                         PublisherID = id,
                         ViewCount = 0,
+                        
                     };
 
                     _context.Tickets.Add(newTicket);
-                    _context.SaveChanges();
-
-
-                    for (var i = 1; i <= ticket.TicketCount; i++)
-                    {
-                        var instances = new TicketInstance
-                        {
-                            Sold = false,
-                            TicketID = newTicket.ID,
-                            UniqueID = Guid.NewGuid().ToString(),
-                        };
-                        _context.TicketInstances.Add(instances);
-                    }
                     _context.SaveChanges();
                     response = "Tickets have been added successfully";
                 }
@@ -264,12 +253,41 @@ namespace Tickets_selling_App.Services
             var TicketToDelete = _context.Tickets.FirstOrDefault(x => x.ID == TicketId);
             if (TicketToDelete != null)
             {
-                var instancesToDelete = _context.TicketInstances.Where(x => x.TicketID == TicketToDelete.ID);
-                _context.TicketInstances.RemoveRange(instancesToDelete);
                 _context.Tickets.Remove(TicketToDelete);
                 _context.SaveChanges();
             }
         }
+        public GetTicketDto MatchingTicket(int ticketid)
+        {
+            var targetTicket = _context.Tickets
+                .Join(_context.CreatorAccount,
+                      ticket => ticket.PublisherID,
+                      creator => creator.Id,
+                      (ticket, creator) => new { ticket, creator })
+                .Where(tc => tc.ticket.ID == ticketid)
+                .Select(tc => new GetTicketDto
+                {
+                    ID = tc.ticket.ID,
+                    Activation_Date = tc.ticket.Activation_Date,
+                    Description = tc.ticket.Description,
+                    Expiration_Date = tc.ticket.Expiration_Date,
+                    Genre = tc.ticket.Genre,
+                    Photo = tc.ticket.Photo,
+                    Price = tc.ticket.Price,
+                    Title = tc.ticket.Title,
+                    Publisher = new CreatorAccountDTO
+                    {
+                        UserName = tc.creator.UserName,
+                        Logo = tc.creator.Logo,
+                        id = tc.ticket.PublisherID,
+                    },
+                    ViewCount = tc.ticket.ViewCount,
+                })
+                .FirstOrDefault();
+
+            return targetTicket;
+        }
+
 
 
 

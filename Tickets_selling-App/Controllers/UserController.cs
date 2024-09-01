@@ -1,13 +1,10 @@
-﻿using Azure;
-using Hangfire.States;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Tickets_selling_App.Dtos;
 using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Interfaces;
-using Tickets_selling_App.Migrations;
 using Tickets_selling_App.Models;
 using Tickets_selling_App.User_Side_Response;
+using static QRCoder.PayloadGenerator;
 
 namespace Tickets_selling_App.Controllers
 {
@@ -17,9 +14,11 @@ namespace Tickets_selling_App.Controllers
     public class UserController : Controller
     {
         private readonly User_Interface _User;
-        public UserController(User_Interface customer)
+        private readonly Tkt_Dbcontext _context;
+        public UserController(User_Interface customer,Tkt_Dbcontext tkt_Dbcontext)
         { 
             _User = customer;
+            _context = tkt_Dbcontext;
         }
 
         [HttpPost("/reset password")]
@@ -151,46 +150,92 @@ namespace Tickets_selling_App.Controllers
             }
         }
 
-
         //Buy Ticket 
+        [HttpGet("/my-tickets")]
+        [Authorize(Policy = "EveryRole2")]
+        public IActionResult MyTikets()
+        {
+            try
+            {
+               var userId = User.FindFirst("UserID")?.Value;
+               var response = _User.GetMyTickets(Convert.ToInt32(userId));
+               return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong: {ex.Message}");
+            }
+        }
+        [HttpGet("/my-tickets-instances/{id}")]
+        [Authorize(Policy = "EveryRole2")]
+
+        public IActionResult MyTiketInstances([FromRoute] int id)
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var response = _User.GetMyTicketInstances(Convert.ToInt32(userId), id);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong: {ex.Message}");
+            }
+        }
+
+
+        // Buy ticket 
+
+        public class BuyTicketRequest
+        {
+            public int TicketId { get; set; }
+            public int TicketCount { get; set; }
+        }
         [HttpPost("/buy-ticket")]
         [Authorize(Policy = "EveryRole2")]
-        public IActionResult BuyTicket([FromBody] TicketRequest request)
+        public IActionResult BuyTicket([FromBody] BuyTicketRequest request)
         {
-            if (request == null || request.TicketId <= 0)
+            if (request.TicketId <= 0)
             {
-                return BadRequest("Invalid ticket ID.");
+                return BadRequest(new Client_Response
+                {
+                    Message = "Invalid ticket ID."
+                });
             }
 
             try
             {
-                var userId = User.FindFirst("UserID")?.Value;
-                if (string.IsNullOrEmpty(userId))
+                var ticket = _context.Tickets.FirstOrDefault(x => x.ID == request.TicketId);
+                if (ticket != null && ticket.TicketCount >= request.TicketCount)
                 {
-                    return Unauthorized("User ID not found.");
-                }
+                    var userId = User.FindFirst("UserID")?.Value;
+                    bool success = _User.Buy_Ticket(Convert.ToInt32(userId), request.TicketId, request.TicketCount);
 
-                string successMessage = _User.Buy_Ticket(Convert.ToInt32(userId), request.TicketId);
-                if (!string.IsNullOrEmpty(successMessage))
-                {
-                    var message = new Client_Response
+                    if (success)
                     {
-                        Message = successMessage,
-                    };
-                    return Ok(message);
+                        return Ok(new Client_Response
+                        {
+                            Message = "You bought the ticket successfully."
+                        });
+                    }
+                    else
+                    {
+                        return BadRequest(new Client_Response
+                        {
+                            Message = "Something went wrong!"
+                        });
+                    }
                 }
 
-                return BadRequest("Ticket purchase failed.");
+                return BadRequest(new Client_Response
+                {
+                    Message = $"Only {ticket?.TicketCount ?? 0} tickets are left!"
+                });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Log the exception details here
                 return StatusCode(500, "Internal server error.");
             }
-        }
-        public class TicketRequest
-        {
-            public int TicketId { get; set; }
         }
 
     }

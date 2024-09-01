@@ -14,5 +14,6 @@ namespace Tickets_selling_App.Models
         public string Photo { get; set; }
         public int ViewCount { get; set; }
         public int PublisherID { get; set; }
+        public int TicketCount { get; set; }
     }
 }

@@ -7,6 +7,9 @@ using System.Text;
 using Tickets_selling_App.Dtos.User;
 using Microsoft.Identity.Client;
 using Microsoft.AspNetCore.Mvc;
+using Tickets_selling_App.Dtos.TicketDTO;
+using System.Collections.Immutable;
+using Tickets_selling_App.Dtos.Ticket;
 
 namespace Tickets_selling_App.Services
 {
@@ -284,46 +287,87 @@ namespace Tickets_selling_App.Services
             }
             return null;
         }
+        public ICollection<GetTicketDto> GetMyTickets(int UserID)
+        {
+            var soldTickets = _context.SoldTickets
+                .Where(st => st.UserID == UserID)
+                .GroupBy(st => st.TicketID)
+                .Select(g => new
+                {
+                    TicketID = g.Key,
+                    SoldCount = g.Count()
+                })
+                .ToList();
+
+            if (!soldTickets.Any())
+            {
+                return new List<GetTicketDto>();
+            }
+
+            var tickets = _context.Tickets
+                .Where(t => soldTickets.Select(st => st.TicketID).Contains(t.ID))
+                .Select(t => new GetTicketDto
+                {
+                    ID = t.ID,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Activation_Date = t.Activation_Date,
+                    Expiration_Date = t.Expiration_Date,
+                    Genre = t.Genre,
+                    Photo = t.Photo,
+                    Price = t.Price,
+                    TicketCount = _context.SoldTickets.Where(st => st.TicketID == t.ID && st.UserID == UserID).Count(),
+                })
+                .ToList();
+
+            return tickets;
+        }
+
+        public IEnumerable<SoldTicketDto> GetMyTicketInstances(int UserID, int ticketid)
+        {
+            var soldInstances = _context.SoldTickets
+                .Where(st => st.UserID == UserID && st.TicketID == ticketid)
+                .ToList();
+
+            var result = soldInstances
+                .Select(st => new SoldTicketDto
+                {
+                    UniqueID = st.UniqueTicketID,
+                    IsActive = st.IsActive,
+                })
+                .ToList();
+
+            return result;
+        }
 
         //Buy Ticket 
-        public string Buy_Ticket(int userId, int ticketId)
+        public bool Buy_Ticket(int userId, int ticketId, int ticketCount)
         {
             var user = _context.User.FirstOrDefault(x => x.ID == userId);
             var ticket = _context.Tickets.FirstOrDefault(x => x.ID == ticketId);
 
             if (user == null)
             {
-                return "User not found.";
+                return false;
             }
+            var soldTickets = new List<SoldTickets>();
+                for (var i = 0; i < ticketCount; i++)
+                {
+                    var soldTicket = new SoldTickets
+                    {
+                        TicketID = ticketId,
+                        UniqueTicketID = Guid.NewGuid().ToString(),
+                        UserID = userId,
+                        IsActive = true,
+                    };
 
-            if (ticket == null)
-            {
-                return "Ticket not found.";
-            }
-
-            var ticketInstance = _context.TicketInstances
-                .FirstOrDefault(x => x.TicketID == ticketId && x.Sold == false);
-
-            if (ticketInstance == null)
-            {
-                return "No available ticket instances.";
-            }
-
-            ticketInstance.Sold = true;
-            _context.SaveChanges();
-
-            var soldTicket = new SoldTickets
-            {
-                TicketID = ticketId,
-                UniqueTicketID = ticketInstance.UniqueID,
-                UserID = userId,
-            };
-
-            _context.SoldTickets.Add(soldTicket);
-            _context.SaveChanges();
-
-            return "Ticket purchased successfully!";
+                    soldTickets.Add(soldTicket);
+                }
+              ticket.TicketCount = ticket.TicketCount - ticketCount;
+              _context.SoldTickets.AddRange(soldTickets);
+              _context.SaveChanges();
+             
+              return true;
         }
-
     }
 }

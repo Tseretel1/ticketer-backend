@@ -15,7 +15,7 @@ namespace Tickets_selling_App.Controllers
             _notAuth = notAuth;
         }
 
-        [HttpGet("/all Tickets")]
+        [HttpGet("/all-tickets")]
         public IActionResult GetAlltickets()
         {
             try
@@ -43,7 +43,8 @@ namespace Tickets_selling_App.Controllers
         }
 
 
-        [HttpGet("/Popular Events")]
+
+        [HttpGet("/popular-events")]
         public IActionResult PopularEvents()
         {
             try
@@ -59,7 +60,7 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong {ex.Message}");
             }
         }
-        [HttpPatch("/View Count")]
+        [HttpPatch("/view-count")]
         public IActionResult ViewCount([FromBody] int id )
         {
             try

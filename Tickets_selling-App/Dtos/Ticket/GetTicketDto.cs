@@ -16,6 +16,8 @@ namespace Tickets_selling_App.Dtos.TicketDTO
         public string Photo { get; set; }
         public int TicketCount { get; set; }
         public int ViewCount { get; set; }
+        public int sold { get; set; }
+        public string uniqueId { get; set; }
         public CreatorAccountDTO? Publisher { get; set; }
     }
 }

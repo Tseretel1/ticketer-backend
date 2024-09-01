@@ -1,4 +1,6 @@
-﻿using Tickets_selling_App.Dtos.User;
+﻿using Tickets_selling_App.Dtos.Ticket;
+using Tickets_selling_App.Dtos.TicketDTO;
+using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App.Interfaces
@@ -13,6 +15,8 @@ namespace Tickets_selling_App.Interfaces
         string CreateToken(User user);
         User Login(LoginDto user);
         object Profile(int userid);
-        string Buy_Ticket(int UserID, int ticketid);
+        ICollection<GetTicketDto> GetMyTickets(int UserID);
+        IEnumerable<SoldTicketDto> GetMyTicketInstances(int UserID, int ticketid);
+        bool Buy_Ticket(int UserID, int ticketid, int TicketCount);
     }
 }
