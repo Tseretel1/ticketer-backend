@@ -6,7 +6,8 @@ namespace Tickets_selling_App.Interfaces
 {
     public interface CreatorInterface
     {
-        string AddTicket(CreateTicketDto ticket,int id);        
+        string AddTicket(CreateTicketDto ticket,int id);
+        string UpdateTicket(CreateTicketDto ticket);
         void DeleteTicket(int TicketId);
         GetTicketDto MatchingTicket(int ticketid);
 

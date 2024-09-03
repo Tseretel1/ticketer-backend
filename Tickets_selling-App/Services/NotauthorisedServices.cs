@@ -119,6 +119,7 @@ namespace Tickets_selling_App.Services
                             Photo = ticket.Photo,
                             Price = ticket.Price,
                             Title = ticket.Title,
+                            sold = _context.SoldTickets.Where(x => x.TicketID == ticket.ID).Count(),
                             Publisher = new CreatorAccountDTO
                             {
                                 UserName = creator.UserName,
@@ -127,7 +128,7 @@ namespace Tickets_selling_App.Services
                             ViewCount = ticket.ViewCount,
                         };
             var topTickets = query
-                                .OrderByDescending(t => t.ViewCount)
+                                .OrderByDescending(t => t.sold)
                                 .Take(5)
                                 .ToList();
             return topTickets;

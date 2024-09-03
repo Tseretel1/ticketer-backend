@@ -144,6 +144,33 @@ namespace Tickets_selling_App.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+        [HttpPut("update-tickets")]
+        public IActionResult UpdateTicket([FromBody] CreateTicketDto ticket)
+        {
+            try
+            {
+                string Response = "";
+                if (ticket == null)
+                {
+                    return BadRequest("Ticket does not exist");
+                }
+
+                if (ticket.Activation_Date >= ticket.Expiration_Date)
+                {
+                    return BadRequest(new { message = "Activation date must be earlier than expiration date" });
+                }
+                else
+                {
+                    string response = _creator.UpdateTicket(ticket);
+                    Response = response;
+                }
+                return Ok(new { message = Response });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
         [HttpGet("matching-ticket/{ticketId}")]
         [Authorize(Policy = "EveryRole")]
         public ActionResult<GetTicketDto> GetMatchingTicket(int ticketId)

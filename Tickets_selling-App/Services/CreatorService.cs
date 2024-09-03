@@ -162,7 +162,7 @@ namespace Tickets_selling_App.Services
         //  ---------------------Services --------------------------
         public ICollection<GetTicketDto> GetMyTickets(int AccountID)
         {
-            var query = from ticket in _context.Tickets
+            var query = from ticket in _context.Tickets.OrderByDescending(x => x.Activation_Date)
                         join creator in _context.CreatorAccount
                         on ticket.PublisherID equals creator.Id
                         where ticket.PublisherID == AccountID
@@ -185,6 +185,7 @@ namespace Tickets_selling_App.Services
                                 Logo = creator.Logo,
                             },
                             ViewCount = ticket.ViewCount,
+                            TicketCount = ticket.TicketCount,
                         };
 
             return query.ToList();
@@ -245,6 +246,42 @@ namespace Tickets_selling_App.Services
             {
                 response = "Catch: " + ex.Message;
             }
+            return response;
+        }
+        public string UpdateTicket(CreateTicketDto ticket)
+        {
+            string response;
+
+            try
+            {
+                if (ticket == null)
+                {
+                    return "Error: Ticket data is null";
+                }
+
+                var TicketToUpdate = _context.Tickets.SingleOrDefault(x => x.ID == ticket.ID);
+
+                if (TicketToUpdate == null)
+                {
+                    return "Error: Ticket not found";
+                }
+                TicketToUpdate.Title = ticket.Title;
+                TicketToUpdate.Price = ticket.Price;
+                TicketToUpdate.Activation_Date = ticket.Activation_Date;
+                TicketToUpdate.Expiration_Date = ticket.Expiration_Date;
+                TicketToUpdate.Description = ticket.Description;
+                TicketToUpdate.Genre = ticket.Genre;
+                TicketToUpdate.Photo = ticket.Photo;
+                TicketToUpdate.TicketCount = ticket.TicketCount;
+                _context.SaveChanges();
+
+                response = "Ticket has been modified successfully";
+            }
+            catch (Exception ex)
+            {
+                response = $"Error: {ex.Message}";
+            }
+
             return response;
         }
 
