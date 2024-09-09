@@ -317,7 +317,7 @@ namespace Tickets_selling_App.Services
                     Photo = t.Photo,
                     Price = t.Price,
                     TicketCount = _context.SoldTickets.Where(st => st.TicketID == t.ID && st.UserID == UserID).Count(),
-                })
+                }).OrderByDescending(x => x.Activation_Date).Reverse()
                 .ToList();
 
             return tickets;

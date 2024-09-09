@@ -13,6 +13,7 @@ namespace Tickets_selling_App.Interfaces
 
         public ICollection<GetTicketDto> GetMyTickets(int UserID);
         object GetMyProfile(int userid,int Userid);
+        ICollection<AccountManagment> GetManagement(int AccountID);
 
         public List<Ticket> MostViewed(int id);
         bool register_as_creator(int userid,RegisterAsCreatorDTO cred);

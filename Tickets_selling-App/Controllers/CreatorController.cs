@@ -81,7 +81,7 @@ namespace Tickets_selling_App.Controllers
             }
         }
         [HttpGet("/creator-account-login")]
-        [Authorize(Policy = "EveryRole")]
+        [Authorize(Policy = "EveryRole2")]
         public IActionResult Creator_Account_Login(string username, string password)
         {
             try
@@ -114,6 +114,54 @@ namespace Tickets_selling_App.Controllers
             }
         }
 
+
+        //Maangment services 
+
+        [HttpGet("my-tickets")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult Mytickets()
+        {
+            var userId = User.FindFirst("AccountID")?.Value;
+            var MyTickets = _creator.GetMyTickets(Convert.ToInt32(userId));
+            if (MyTickets != null)
+            {
+                return Ok(MyTickets);
+            }
+            return null;
+        }
+
+
+        [HttpGet("my-profile")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult MyProfile()
+        {
+            var AccountID = User.FindFirst("AccountID")?.Value;
+            var userid = User.FindFirst("UserID")?.Value;
+            var MyTickets = _creator.GetMyProfile(Convert.ToInt32(AccountID), Convert.ToInt32(userid));
+            if (MyTickets != null)
+            {
+                return Ok(MyTickets);
+            }
+            return null;
+        }
+        [HttpGet("account-managment")]
+        [Authorize(Policy = "CreatorAdminOnly")]
+        public IActionResult AccountManagment()
+        {
+            var AccountID = User.FindFirst("AccountID")?.Value;
+            var MyTickets = _creator.GetManagement(Convert.ToInt32(AccountID));
+            if (MyTickets != null)
+            {
+                return Ok(MyTickets);
+            }
+            return null;
+        }
+
+
+
+
+
+        //Ticket services 
 
         [HttpPost("add-new-tickets")]
         [Authorize(Policy = "EveryRole")]
@@ -181,35 +229,6 @@ namespace Tickets_selling_App.Controllers
                 return NotFound();
             }
             return Ok(result);
-        }
-
-
-        [HttpGet("my-tickets")]
-        [Authorize(Policy = "EveryRole")]
-        public IActionResult Mytickets()
-        {
-            var userId = User.FindFirst("AccountID")?.Value;
-            var MyTickets = _creator.GetMyTickets(Convert.ToInt32(userId));
-            if(MyTickets != null)
-            {
-                return Ok(MyTickets); 
-            }
-            return null;
-        }
-
-
-        [HttpGet("my-profile")]
-        [Authorize(Policy = "EveryRole")]
-        public IActionResult MyProfile()
-        {
-            var AccountID = User.FindFirst("AccountID")?.Value;
-            var userid = User.FindFirst("UserID")?.Value;
-            var MyTickets = _creator.GetMyProfile(Convert.ToInt32(AccountID),Convert.ToInt32(userid));
-            if (MyTickets != null)
-            {
-                return Ok(MyTickets);
-            }
-            return null;
         }
 
 

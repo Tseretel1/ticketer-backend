@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.Identity.Client;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -68,7 +69,7 @@ namespace Tickets_selling_App.Services
                         var newAccount = new CreatorAccount
                         {
                             CreatorID = userid,
-                            Logo = acc.Logo,
+                            Logo = "",
                             Password = HashedPassword,
                             UserName = acc.UserName,
                         };
@@ -159,7 +160,7 @@ namespace Tickets_selling_App.Services
             return tokenHandler.WriteToken(token);
         }
 
-        //  ---------------------Services --------------------------
+        //  ---------------------Managment services  --------------------------
         public ICollection<GetTicketDto> GetMyTickets(int AccountID)
         {
             var query = from ticket in _context.Tickets.OrderByDescending(x => x.Activation_Date)
@@ -214,8 +215,49 @@ namespace Tickets_selling_App.Services
         }
 
 
+        public ICollection<AccountManagment> GetManagement(int accountId)
+        {
+            var account = _context.CreatorAccount.FirstOrDefault(x => x.Id == accountId);
+            if (account == null)
+            {
+                return new List<AccountManagment>();
+            }
 
-        //ticket crud
+            var accountRoles = _context.AccountRoles.Where(x => x.AccountID == accountId).ToList();
+            if (accountRoles.Count == 0)
+            {
+                return new List<AccountManagment>();
+            }
+            var managementList = new List<AccountManagment>();
+
+            foreach (var role in accountRoles)
+            {
+                var user = _context.User.FirstOrDefault(x => x.ID == role.UserID);
+                if (user != null)
+                {
+                    var accountManagement = new AccountManagment
+                    {
+                        AccountRole = role.Role,
+                        Email = user.Email,
+                        LastName = user.LastName,
+                        Name = user.Name,
+                        Profile = user.Profile_Picture,
+                        UserID = user.ID,
+                        phoneNumber = user.PhoneNumber,
+                        PersonalID = user.PersonalID,
+                    };
+                    managementList.Add(accountManagement);
+                }
+            }
+
+            return managementList;
+        }
+
+
+
+
+
+        //Ticket Services
         public string AddTicket(CreateTicketDto ticket, int id)
         {
             string response = "";
