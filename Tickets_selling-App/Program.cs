@@ -48,7 +48,7 @@ builder.Services.AddAuthorization(options =>
      context.User.IsInRole("AccountAdmin")
 
     ));
-    options.AddPolicy("CreatorAdminOnly", policy => policy.RequireRole("AccountAdmin"));
+    options.AddPolicy("AccountAdminOnly", policy => policy.RequireRole("AccountAdmin"));
     options.AddPolicy("ModeratorOnly", policy => policy.RequireRole("Moderator"));
     options.AddPolicy("CreatorOnly", policy => policy.RequireRole("Creator"));
 });

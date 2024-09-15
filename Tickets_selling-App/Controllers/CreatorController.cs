@@ -115,7 +115,7 @@ namespace Tickets_selling_App.Controllers
         }
 
 
-        //Maangment services 
+        //Management services 
 
         [HttpGet("my-tickets")]
         [Authorize(Policy = "EveryRole")]
@@ -145,7 +145,7 @@ namespace Tickets_selling_App.Controllers
             return null;
         }
         [HttpGet("account-managment")]
-        [Authorize(Policy = "CreatorAdminOnly")]
+        [Authorize(Policy = "AccountAdminOnly")]
         public IActionResult AccountManagment()
         {
             var AccountID = User.FindFirst("AccountID")?.Value;
@@ -158,11 +158,21 @@ namespace Tickets_selling_App.Controllers
         }
 
 
+        [HttpDelete("remove-user-from-account/{userid}")]
+        [Authorize(Policy = "AccountAdminOnly")]
+        public IActionResult RemoveUser(int userid)
+        {
+            var MyTickets = _creator.RemoveUser(userid);
+            if (MyTickets)
+            {
+                return Ok(true);
+            }
+            return Ok(false);
+        }
 
 
 
         //Ticket services 
-
         [HttpPost("add-new-tickets")]
         [Authorize(Policy = "EveryRole")]
         public IActionResult AddTicket([FromBody] CreateTicketDto ticket)
@@ -193,6 +203,7 @@ namespace Tickets_selling_App.Controllers
             }
         }
         [HttpPut("update-tickets")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult UpdateTicket([FromBody] CreateTicketDto ticket)
         {
             try
@@ -258,5 +269,20 @@ namespace Tickets_selling_App.Controllers
             return Ok();
         }
 
+
+
+
+        //Qr code Services 
+        [HttpGet("scann-ticket/{ticketId}")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult ScannTicket(string ticketId)
+        {
+            var result = _creator.ScanTicket(ticketId);
+            if (result != null)
+            {
+                return Ok(result);
+            }
+            return Ok();
+        }
     }
 }

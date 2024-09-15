@@ -253,6 +253,20 @@ namespace Tickets_selling_App.Services
             return managementList;
         }
 
+        public bool RemoveUser(int userid)
+        {
+            var userToRemove = _context.AccountRoles.FirstOrDefault(x=> x.UserID == userid);
+            if(userToRemove != null)
+            {
+                _context.AccountRoles.Remove(userToRemove);
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
+        }
+
+
+
 
 
 
@@ -386,6 +400,47 @@ namespace Tickets_selling_App.Services
                     .ToList();
                 return MostViewedTickets;
             }
+            return null;
+        }
+
+
+
+
+        //Qr Scanner Services
+        public ScanedTicketDTO ScanTicket(string ticketid)
+        {
+            var FoundTicket = _context.SoldTickets.FirstOrDefault(x => x.UniqueTicketID == ticketid);
+            if (FoundTicket == null)
+            {
+                var news = new ScanedTicketDTO
+                {
+                    isExpired = false,
+                    TicketTitle = "ticket Could not be found",
+                };
+                return news;
+            }
+            var FoundUser = _context.User.FirstOrDefault(x => x.ID == FoundTicket.UserID);
+            if (FoundUser != null)
+            {
+                var Ticket = _context.Tickets.FirstOrDefault(x => x.ID == FoundTicket.TicketID);
+                bool Expired = false;   
+                if(Ticket.Expiration_Date < DateTime.Now)
+                {
+                    Expired = true;
+                };
+                var Ticketqrd = new ScanedTicketDTO
+                {
+                    UserName = FoundUser.Name + " " + FoundUser.LastName,
+                    isExpired = Expired,
+                    IsActive = FoundTicket.IsActive,
+                    TicketTitle = Ticket.Title,
+                    ActivationDate = Ticket.Activation_Date,
+                    ExpirationDate = Ticket.Expiration_Date,
+                    TicketPhoto = Ticket.Photo,
+                };
+      
+                return Ticketqrd;
+            }      
             return null;
         }
     }
