@@ -105,7 +105,7 @@ namespace Tickets_selling_App.Services
             return false;
         }
 
-        public ICollection<GetTicketDto> PopularEvents()
+        public ICollection<GetTicketDto> PopularEventsCover()
         {
             var query = from ticket in _context.Tickets
                         join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
@@ -130,6 +130,152 @@ namespace Tickets_selling_App.Services
             var topTickets = query
                                 .OrderByDescending(t => t.sold)
                                 .Take(5)
+                                .ToList();
+            return topTickets;
+        }
+
+        public ICollection<GetTicketDto> MostPopularTickets()
+        {
+            var query = from ticket in _context.Tickets
+                        join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            sold = _context.SoldTickets.Where(x => x.TicketID == ticket.ID).Count(),
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                            TicketCount = ticket.TicketCount,
+                        };
+            var topTickets = query
+                                .OrderByDescending(t => t.sold)
+                                .Take(20)
+                                .ToList();
+            return topTickets;
+        }
+
+        public ICollection<GetTicketDto> UpcomingTickets()
+        {
+            var query = from ticket in _context.Tickets
+                        join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            sold = _context.SoldTickets.Where(x => x.TicketID == ticket.ID).Count(),
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                            TicketCount = ticket.TicketCount,
+                        };
+            var topTickets = query
+                                .OrderByDescending(t => t.Activation_Date)
+                                .Take(20)
+                                .Reverse()
+                                .ToList();
+            return topTickets;
+        }
+
+        public ICollection<GetTicketDto> TheaterTickets()
+        {
+            var query = from ticket in _context.Tickets
+                        join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            sold = _context.SoldTickets.Where(x => x.TicketID == ticket.ID).Count(),
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                        };
+            var topTickets = query.Where(t => t.Genre == "Theater").ToList();
+            return topTickets;
+        }
+
+
+        public ICollection<GetTicketDto> searchbyTitle(string title)
+        {
+            var query = from ticket in _context.Tickets
+                        join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            sold = _context.SoldTickets.Where(x => x.TicketID == ticket.ID).Count(),
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                        };
+            var topTickets = query.Where(t=>t.Title.Contains(title))
+                                .OrderByDescending(t => t.Activation_Date)
+                                .Reverse()
+                                .ToList();
+            return topTickets;
+        }
+
+        public ICollection<GetTicketDto> getbyCategories(string genre)
+        {
+            var query = from ticket in _context.Tickets
+                        join creator in _context.CreatorAccount on ticket.PublisherID equals creator.Id
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            sold = _context.SoldTickets.Where(x => x.TicketID == ticket.ID).Count(),
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                        };
+            var topTickets = query.Where(t => t.Genre == genre)
+                                .OrderByDescending(t => t.Activation_Date)
+                                .Reverse()
                                 .ToList();
             return topTickets;
         }

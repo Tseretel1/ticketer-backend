@@ -10,7 +10,6 @@ namespace Tickets_selling_App.Models
         public string LastName { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
-        public string? Profile_Picture { get; set; }
         public string Role { get; set; }
         public long? PersonalID { get; set; }
         public long? PhoneNumber { get; set; }

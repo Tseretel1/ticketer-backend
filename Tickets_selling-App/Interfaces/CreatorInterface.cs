@@ -1,4 +1,5 @@
-﻿using Tickets_selling_App.Dtos.Creator;
+﻿using Microsoft.EntityFrameworkCore;
+using Tickets_selling_App.Dtos.Creator;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Models;
 
@@ -11,10 +12,11 @@ namespace Tickets_selling_App.Interfaces
         string UpdateTicket(CreateTicketDto ticket);
         void DeleteTicket(int TicketId);
         GetTicketDto MatchingTicket(int ticketid);
-
+        public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID);
+        public ICollection<GetTicketDto> GetMyExpiredTickets(int AccountID);
 
         //Staff Management
-        public ICollection<GetTicketDto> GetMyTickets(int UserID);
+
         object GetMyProfile(int userid,int Userid);
         ICollection<AccountManagment> GetManagement(int AccountID);
         bool RemoveUser(int userid);
@@ -26,6 +28,8 @@ namespace Tickets_selling_App.Interfaces
         bool Creator_Account_Register(CreatorAccount acc,int userid);
         string Creator_Account_Login(string username, string passwrod, int userid);        
         List<Ticket> MostViewed(int id);
+
+
 
         //Qr scanner
         ScanedTicketDTO ScanTicket(string ticketId);

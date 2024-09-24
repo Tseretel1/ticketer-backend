@@ -33,24 +33,6 @@ namespace Tickets_selling_App.Controllers
             string Response = _User.Changing_Password(Mail, password, passcode);
             return Ok(Response);
         }
-
-
-        [HttpGet("/Get Users")]
-        public IActionResult AllUsers ()
-        {
-           try
-            {
-                var Customer = _User.AllCustomers();
-                if (Customer == null || !Customer.Any())
-                    return NotFound("User not Found");
-                return Ok(Customer);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong {ex.Message}");
-            }
-        }
-
         [HttpGet("/user-profile")]
         [Authorize(Policy = "EveryRole2")]
         public IActionResult MyProfile()
@@ -150,16 +132,31 @@ namespace Tickets_selling_App.Controllers
             }
         }
 
-        //Buy Ticket 
-        [HttpGet("/my-tickets")]
+        //my Ticket 
+        [HttpGet("/my-active-tickets")]
         [Authorize(Policy = "EveryRole2")]
-        public IActionResult MyTikets()
+        public IActionResult MyctiveTikets()
         {
             try
             {
                var userId = User.FindFirst("UserID")?.Value;
-               var response = _User.GetMyTickets(Convert.ToInt32(userId));
+               var response = _User.activeTickets(Convert.ToInt32(userId));
                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong: {ex.Message}");
+            }
+        }
+        [HttpGet("/my-expired-tickets")]
+        [Authorize(Policy = "EveryRole2")]
+        public IActionResult MyExpiredTikets()
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var response = _User.expiredTickets(Convert.ToInt32(userId));
+                return Ok(response);
             }
             catch (Exception ex)
             {

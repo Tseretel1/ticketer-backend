@@ -161,7 +161,7 @@ namespace Tickets_selling_App.Services
         }
 
         //  ---------------------Managment services  --------------------------
-        public ICollection<GetTicketDto> GetMyTickets(int AccountID)
+        public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID)
         {
             var query = from ticket in _context.Tickets.OrderByDescending(x => x.Activation_Date)
                         join creator in _context.CreatorAccount
@@ -189,7 +189,36 @@ namespace Tickets_selling_App.Services
                             TicketCount = ticket.TicketCount,
                         };
 
-            return query.ToList();
+            return query.Where(x => x.Activation_Date > DateTime.Now).ToList();
+        }
+        public ICollection<GetTicketDto> GetMyExpiredTickets(int AccountID)
+        {
+            var query = from ticket in _context.Tickets.OrderByDescending(x => x.Activation_Date)
+                        join creator in _context.CreatorAccount
+                        on ticket.PublisherID equals creator.Id
+                        where ticket.PublisherID == AccountID
+                        let SoldTicketCount = _context.SoldTickets.Count(ti => ti.TicketID == ticket.ID)
+                        where ticket.PublisherID == AccountID
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            sold = SoldTicketCount,
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                            TicketCount = ticket.TicketCount,
+                        };
+            return query.Where(x => x.Expiration_Date < DateTime.Now).ToList();
         }
 
         public object GetMyProfile(int AccountID, int userid)
@@ -205,7 +234,6 @@ namespace Tickets_selling_App.Services
                     UserName = acc.UserName,
                     Name = user.Name,
                     LastName = user.LastName,
-                    Profile = user.Profile_Picture,
                     UserRole = role.Role,
                 };
 
@@ -241,7 +269,6 @@ namespace Tickets_selling_App.Services
                         Email = user.Email,
                         LastName = user.LastName,
                         Name = user.Name,
-                        Profile = user.Profile_Picture,
                         UserID = user.ID,
                         phoneNumber = user.PhoneNumber,
                         PersonalID = user.PersonalID,

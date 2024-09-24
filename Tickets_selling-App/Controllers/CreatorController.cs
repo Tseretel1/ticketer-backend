@@ -122,7 +122,7 @@ namespace Tickets_selling_App.Controllers
         public IActionResult Mytickets()
         {
             var userId = User.FindFirst("AccountID")?.Value;
-            var MyTickets = _creator.GetMyTickets(Convert.ToInt32(userId));
+            var MyTickets = _creator.GetMyActiveTickets(Convert.ToInt32(userId));
             if (MyTickets != null)
             {
                 return Ok(MyTickets);

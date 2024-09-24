@@ -5,8 +5,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Tickets_selling_App.Dtos.User;
-using Microsoft.Identity.Client;
-using Microsoft.AspNetCore.Mvc;
 using Tickets_selling_App.Dtos.TicketDTO;
 using System.Collections.Immutable;
 using Tickets_selling_App.Dtos.Ticket;
@@ -37,7 +35,6 @@ namespace Tickets_selling_App.Services
                     Name = x.Name,
                     Email = x.Email,
                     LastName = x.LastName,
-                    Profile_Picture = x.Profile_Picture
                 };
 
                 UserToReturn.Add(UserListItem);
@@ -203,7 +200,6 @@ namespace Tickets_selling_App.Services
                     Name = user.Name,
                     Password = hashedPassword,
                     Role = "User",
-                    Profile_Picture = null
                 };
 
                 _context.User.Add(newUser);
@@ -280,14 +276,14 @@ namespace Tickets_selling_App.Services
                 {
                     Name = user.Name,
                     LastName = user.LastName,
-                    Profile = user.Profile_Picture,
                 };
 
                 return Profile;
             }
             return null;
         }
-        public ICollection<GetTicketDto> GetMyTickets(int UserID)
+
+        public ICollection<GetTicketDto> activeTickets(int UserID)
         {
             var soldTickets = _context.SoldTickets
                 .Where(st => st.UserID == UserID)
@@ -298,14 +294,13 @@ namespace Tickets_selling_App.Services
                     SoldCount = g.Count()
                 })
                 .ToList();
-
             if (!soldTickets.Any())
             {
                 return new List<GetTicketDto>();
             }
-
             var tickets = _context.Tickets
-                .Where(t => soldTickets.Select(st => st.TicketID).Contains(t.ID))
+                .Where(t => soldTickets.Select(st => st.TicketID).Contains(t.ID)
+                             && t.Activation_Date > DateTime.Now)
                 .Select(t => new GetTicketDto
                 {
                     ID = t.ID,
@@ -317,7 +312,44 @@ namespace Tickets_selling_App.Services
                     Photo = t.Photo,
                     Price = t.Price,
                     TicketCount = _context.SoldTickets.Where(st => st.TicketID == t.ID && st.UserID == UserID).Count(),
-                }).OrderByDescending(x => x.Activation_Date).Reverse()
+                })
+                .OrderByDescending(x => x.Expiration_Date)
+                .ToList();
+
+            return tickets;
+        }
+        public ICollection<GetTicketDto> expiredTickets(int UserID)
+        {
+            var soldTickets = _context.SoldTickets
+                .Where(st => st.UserID == UserID)
+                .GroupBy(st => st.TicketID)
+                .Select(g => new
+                {
+                    TicketID = g.Key,
+                    SoldCount = g.Count()
+                })
+                .ToList();
+            if (!soldTickets.Any())
+            {
+                return new List<GetTicketDto>();
+            }
+            var currentDate = DateTime.Now;
+            var tickets = _context.Tickets
+                .Where(t => soldTickets.Select(st => st.TicketID).Contains(t.ID)
+                             && t.Expiration_Date < currentDate)
+                .Select(t => new GetTicketDto
+                {
+                    ID = t.ID,
+                    Title = t.Title,
+                    Description = t.Description,
+                    Activation_Date = t.Activation_Date,
+                    Expiration_Date = t.Expiration_Date,
+                    Genre = t.Genre,
+                    Photo = t.Photo,
+                    Price = t.Price,
+                    TicketCount = _context.SoldTickets.Where(st => st.TicketID == t.ID && st.UserID == UserID).Count(),
+                })
+                .OrderByDescending(x => x.Expiration_Date)
                 .ToList();
 
             return tickets;

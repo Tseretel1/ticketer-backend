@@ -45,11 +45,11 @@ namespace Tickets_selling_App.Controllers
 
 
         [HttpGet("/popular-events")]
-        public IActionResult PopularEvents()
+        public IActionResult PopularEventsCover()
         {
             try
             {
-                var Tickets = _notAuth.PopularEvents();
+                var Tickets = _notAuth.PopularEventsCover();
 
                 if (Tickets == null || !Tickets.Any())
                     return NotFound("Event not Found");
@@ -60,6 +60,94 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong {ex.Message}");
             }
         }
+
+        [HttpGet("/popular-tickets")]
+        public IActionResult MostPopularTicketss()
+        {
+            try
+            {
+                var Tickets = _notAuth.MostPopularTickets();
+
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Event not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+
+
+
+
+        [HttpGet("/upcoming-tickets")]
+        public IActionResult upcomingTickets()
+        {
+            try
+            {
+                var Tickets = _notAuth.UpcomingTickets();
+
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Event not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+
+        [HttpGet("/theater-tickets")]
+        public IActionResult theaterTickets()
+        {
+            try
+            {
+                var Tickets = _notAuth.TheaterTickets();
+
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Event not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+
+        [HttpGet("/filter-by-category/{categoryName}")]
+        public IActionResult categoryFilter(string categoryName)
+        {
+            try
+            {
+                var Tickets = _notAuth.getbyCategories(categoryName);
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Event not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+        [HttpGet("/search-by-title/{categoryName}")]
+        public IActionResult searchTickets(string categoryName)
+        {
+            try
+            {
+                var Tickets = _notAuth.getbyCategories(categoryName);
+
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Event not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+
+
         [HttpPatch("/view-count")]
         public IActionResult ViewCount([FromBody] int id )
         {
