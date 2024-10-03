@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using System.Reflection.Metadata;
+using System.Text;
 using Tickets_selling_App.Dtos.Creator;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
@@ -53,22 +54,27 @@ namespace Tickets_selling_App.Controllers
         }
 
 
-        [HttpGet("/creator-account-registration")]
+        [HttpPost("/creator-account-registration")]
         [Authorize(Policy = "CreatorOnly")]
-        public IActionResult Creator_account_Registration(CreatorAccount acc)
+        public IActionResult Creator_account_Registration(AccountCreationTDO accountName)
         {
             try
             {
                 var userId = User.FindFirst("UserID")?.Value;
-                var creatoraccount = _creator.Creator_Account_Register(acc,Convert.ToInt32(userId));
+                var creatoraccount = _creator.Creator_Account_Register(accountName.AccountName, Convert.ToInt32(userId));
                 if (creatoraccount)
                 {
-                    var response = new Client_Response
+                    var message = new Client_Response
                     {
-                        Message = "you Created account successfully",
+                        Message = "You Created Account Successfully",
                         Success = true,
                     };
-                    return Ok(response);
+                    var ImidiateLogin = _creator.createdAccountCredentials(accountName.AccountName, Convert.ToInt32(userId));
+                    if (ImidiateLogin != null)
+                    {
+                        return Ok(ImidiateLogin);
+                    }
+                    return Ok(message);
                 }
                 else
                 {
@@ -80,14 +86,13 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest(ex.Message);  
             }
         }
-        [HttpGet("/creator-account-login")]
-        [Authorize(Policy = "EveryRole2")]
-        public IActionResult Creator_Account_Login(string username, string password)
+        [HttpGet("/creator-account-login/{accountid}")]
+        public IActionResult Creator_Account_Login(int accountid)
         {
             try
             {
                 var userId = User.FindFirst("UserID")?.Value;
-                var checkCredentials = _creator.Creator_Account_Login(username,password, Convert.ToInt32(userId));
+                var checkCredentials = _creator.Creator_Account_Login(accountid, Convert.ToInt32(userId));
                 if (checkCredentials != null)
                 {
                     var ReturToken = new Client_Response
@@ -97,16 +102,25 @@ namespace Tickets_selling_App.Controllers
                     };
                     return Ok(ReturToken);
                 }
-                else
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpGet("/my-creator-account")]
+        public IActionResult creatorAccounts()
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var checkCredentials = _creator.myCreatorAccounts(Convert.ToInt32(userId));
+                if (checkCredentials != null)
                 {
-
-                    var response = new Client_Response
-                    {
-                        Message = "Username or password is incorrect!",
-                        Success = false,
-                    };
-                    return NotFound(response);
+                    return Ok(checkCredentials);
                 }
+                return NotFound();
             }
             catch (Exception ex)
             {
@@ -116,13 +130,24 @@ namespace Tickets_selling_App.Controllers
 
 
         //Management services 
-
-        [HttpGet("my-tickets")]
+        [HttpGet("active-tickets")]
         [Authorize(Policy = "EveryRole")]
-        public IActionResult Mytickets()
+        public IActionResult activeTickets(int pageindex)
         {
             var userId = User.FindFirst("AccountID")?.Value;
-            var MyTickets = _creator.GetMyActiveTickets(Convert.ToInt32(userId));
+            var MyTickets = _creator.GetMyActiveTickets(Convert.ToInt32(userId),pageindex);
+            if (MyTickets != null)
+            {
+                return Ok(MyTickets);
+            }
+            return null;
+        }
+        [HttpGet("expired-tickets")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult expiredTickets(int pageindex)
+        {
+            var userId = User.FindFirst("AccountID")?.Value;
+            var MyTickets = _creator.GetMyExpiredTickets(Convert.ToInt32(userId),pageindex);
             if (MyTickets != null)
             {
                 return Ok(MyTickets);
@@ -199,8 +224,9 @@ namespace Tickets_selling_App.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
             }
+
         }
         [HttpPut("update-tickets")]
         [Authorize(Policy = "EveryRole")]
@@ -227,8 +253,9 @@ namespace Tickets_selling_App.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
             }
+
         }
         [HttpGet("matching-ticket/{ticketId}")]
         [Authorize(Policy = "EveryRole")]
@@ -242,10 +269,9 @@ namespace Tickets_selling_App.Controllers
             return Ok(result);
         }
 
-
-        [HttpDelete("delete-tickets")]
+        [HttpDelete("delete-tickets/{id}")]
         [Authorize(Policy = "EveryRole")]
-        public IActionResult Delete_Ticket([FromBody] int id)
+        public IActionResult DeleteTicket(int id)
         {
             try
             {
@@ -257,6 +283,7 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest("Something went wrong! " + ex.Message);
             }
         }
+
 
         [HttpGet("most-viewed-tickets")]
         public IActionResult MostViewed(int id)

@@ -56,79 +56,103 @@ namespace Tickets_selling_App.Services
             return false;
         }
 
-        public bool Creator_Account_Register(CreatorAccount acc,int userid)
+        public bool Creator_Account_Register(string accName, int userid)
         {
             try
             {
                 var creator = _context.User.FirstOrDefault(x => x.ID == userid);
                 if (creator != null)
                 {
-                    var AccountExists = _context.CreatorAccount.FirstOrDefault(x => x.UserName == acc.UserName);
-                    if (AccountExists == null) {
-                        var HashedPassword = HashPassword(acc.Password);
+                    var accountExists = _context.CreatorAccount
+                        .FirstOrDefault(x => x.UserName == accName);
+
+                    if (accountExists == null)
+                    {
                         var newAccount = new CreatorAccount
                         {
                             CreatorID = userid,
                             Logo = "",
-                            Password = HashedPassword,
-                            UserName = acc.UserName,
+                            UserName = accName,
                         };
                         _context.CreatorAccount.Add(newAccount);
-                        _context.SaveChanges(); 
-                    }
-                    else
-                    {
-                        return false;
+                        _context.SaveChanges();
+
+                        var createdAccount = _context.CreatorAccount
+                            .FirstOrDefault(x => x.UserName == accName && x.CreatorID == userid);
+
+                        if (createdAccount != null)
+                        {
+                            var role = new CreatorAccountRoles()
+                            {
+                                AccountID = createdAccount.Id,
+                                Role = "CreatorAdmin",
+                                UserID = userid,
+                            };
+                            _context.AccountRoles.Add(role);
+                            _context.SaveChanges();
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
-                var account = _context.CreatorAccount.FirstOrDefault(x=>x.CreatorID == acc.CreatorID);
-                var Role = new CreatorAccountRoles()
-                {
-                    AccountID = account.Id,
-                    Role = "CreatorAdmin",
-                    UserID = userid,
-                };
-                _context.AccountRoles.Add(Role);
-                _context.SaveChanges();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
                 return false;
             }
         }
-        public string HashPassword(string password)
+
+        public CreatorAccount createdAccountCredentials(string accName, int creatorid )
         {
-            string salt = BCrypt.Net.BCrypt.GenerateSalt();
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password, salt);
-            return hashedPassword;
+            try
+            {
+                var creator = _context.CreatorAccount.FirstOrDefault(x => x.UserName == accName && x.CreatorID == creatorid);
+                if (creator == null)
+                {
+                    return null;
+                }
+                return creator;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
-
-
-        public string Creator_Account_Login(string username, string password, int userid)
+        public string Creator_Account_Login(int accountid, int userid)
         {
-            var Account = _context.CreatorAccount.FirstOrDefault(u => u.UserName == username);
-            if (Account == null)
-            {
-                return null;
-            }
-
-            bool isPasswordCorrect = VerifyPassword(password, Account.Password);
-            if (!isPasswordCorrect)
-            {
-                return null;
-            }
-
-            var UserPermission = _context.AccountRoles.FirstOrDefault(x => x.UserID == userid && x.AccountID == Account.Id);
+            var UserPermission = _context.AccountRoles.FirstOrDefault(x => x.UserID == userid && x.AccountID == accountid);
             if (UserPermission == null)
             {
                 return null;
             }
-
             var Token = AccountRoleToken(UserPermission);
             return Token;
         }
+        public ICollection<CreatorAccount> myCreatorAccounts(int userId)
+        {
+            var accountIds = _context.AccountRoles
+                .Where(ar => ar.UserID == userId)
+                .Select(ar => ar.AccountID)
+                .Distinct()
+                .ToList();
+
+            if (!accountIds.Any())
+            {
+                return new List<CreatorAccount>();
+            }
+
+            var creatorAccounts = _context.CreatorAccount
+                .Where(ca => accountIds.Contains(ca.Id))
+                .ToList();
+
+            return creatorAccounts;
+        }
+
+
 
         public bool VerifyPassword(string password, string hashedPassword)
         {
@@ -161,8 +185,10 @@ namespace Tickets_selling_App.Services
         }
 
         //  ---------------------Managment services  --------------------------
-        public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID)
+        public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID, int pageindex)
         {
+            int GetticketCount = 10;
+            int skipcount = pageindex * GetticketCount;
             var query = from ticket in _context.Tickets.OrderByDescending(x => x.Activation_Date)
                         join creator in _context.CreatorAccount
                         on ticket.PublisherID equals creator.Id
@@ -189,16 +215,18 @@ namespace Tickets_selling_App.Services
                             TicketCount = ticket.TicketCount,
                         };
 
-            return query.Where(x => x.Activation_Date > DateTime.Now).ToList();
+            return query.Where(x => x.Activation_Date > DateTime.Now).Skip(skipcount).Take(GetticketCount).ToList();
         }
-        public ICollection<GetTicketDto> GetMyExpiredTickets(int AccountID)
+        public ICollection<GetTicketDto> GetMyExpiredTickets(int AccountID, int pageindex)
         {
-            var query = from ticket in _context.Tickets.OrderByDescending(x => x.Activation_Date)
+            int GetticketCount = 10;
+            int skipcount = pageindex * GetticketCount;
+            var query = from ticket in _context.Tickets
                         join creator in _context.CreatorAccount
                         on ticket.PublisherID equals creator.Id
-                        where ticket.PublisherID == AccountID
+                        where ticket.PublisherID == AccountID && ticket.Expiration_Date < DateTime.Now
                         let SoldTicketCount = _context.SoldTickets.Count(ti => ti.TicketID == ticket.ID)
-                        where ticket.PublisherID == AccountID
+                        orderby ticket.Activation_Date descending 
                         select new GetTicketDto
                         {
                             ID = ticket.ID,
@@ -218,8 +246,9 @@ namespace Tickets_selling_App.Services
                             ViewCount = ticket.ViewCount,
                             TicketCount = ticket.TicketCount,
                         };
-            return query.Where(x => x.Expiration_Date < DateTime.Now).ToList();
+            return query.Where(t=>t.Expiration_Date < DateTime.Now).Skip(skipcount).Take(GetticketCount).ToList();
         }
+
 
         public object GetMyProfile(int AccountID, int userid)
         {

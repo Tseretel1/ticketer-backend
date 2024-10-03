@@ -12,8 +12,8 @@ namespace Tickets_selling_App.Interfaces
         string UpdateTicket(CreateTicketDto ticket);
         void DeleteTicket(int TicketId);
         GetTicketDto MatchingTicket(int ticketid);
-        public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID);
-        public ICollection<GetTicketDto> GetMyExpiredTickets(int AccountID);
+        public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID, int pageindex);
+        public ICollection<GetTicketDto> GetMyExpiredTickets(int AccountID, int pageindex);
 
         //Staff Management
 
@@ -25,8 +25,11 @@ namespace Tickets_selling_App.Interfaces
 
         //Regitser Login
         bool register_as_creator(int userid,RegisterAsCreatorDTO cred);
-        bool Creator_Account_Register(CreatorAccount acc,int userid);
-        string Creator_Account_Login(string username, string passwrod, int userid);        
+        bool Creator_Account_Register(string accName, int userid);
+        string Creator_Account_Login(int accountid,int userid);
+        public ICollection<CreatorAccount> myCreatorAccounts(int userId);
+
+        CreatorAccount createdAccountCredentials(string accName, int creatorid);
         List<Ticket> MostViewed(int id);
 
 

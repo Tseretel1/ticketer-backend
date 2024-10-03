@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tickets_selling_App;
 
@@ -11,9 +12,11 @@ using Tickets_selling_App;
 namespace Tickets_selling_App.Migrations
 {
     [DbContext(typeof(Tkt_Dbcontext))]
-    partial class Tkt_DbcontextModelSnapshot : ModelSnapshot
+    [Migration("20241003103450_removed password filed from creator account")]
+    partial class removedpasswordfiledfromcreatoraccount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
