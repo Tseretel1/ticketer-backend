@@ -38,14 +38,13 @@ builder.Services.AddAuthorization(options =>
     //Creator Roles
     options.AddPolicy("EveryRole", policy => policy.RequireAssertion(context =>
         context.User.IsInRole("Creator") ||
-        context.User.IsInRole("Moderator") ||
-        context.User.IsInRole("AccountAdmin")
+        context.User.IsInRole("Moderator")||
+        context.User.IsInRole("User")
     ));
     options.AddPolicy("EveryRole2", policy => policy.RequireAssertion(context =>
      context.User.IsInRole("Creator") ||
      context.User.IsInRole("Moderator") ||
-     context.User.IsInRole("User") ||
-     context.User.IsInRole("AccountAdmin")
+     context.User.IsInRole("User")
 
     ));
     options.AddPolicy("AccountAdminOnly", policy => policy.RequireRole("AccountAdmin"));
@@ -55,9 +54,9 @@ builder.Services.AddAuthorization(options =>
 
 
 // Add application services
-builder.Services.AddScoped<Admin_Interface, AdminService>();
-builder.Services.AddScoped<User_Interface, UserServicre>();
-builder.Services.AddScoped<Gmail_Interface, GmailService>();
+builder.Services.AddScoped<AdminInterface, AdminService>();
+builder.Services.AddScoped<UserInterface, UserServicre>();
+builder.Services.AddScoped<GmailInterface, GmailService>();
 builder.Services.AddScoped<NotauthorisedInterface,NotauthorisedServices>();
 builder.Services.AddScoped<CreatorInterface,CreatorService>();
 
@@ -95,6 +94,7 @@ app.UseCors("AllowAllOrigins");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Photos")),

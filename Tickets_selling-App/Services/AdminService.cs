@@ -6,7 +6,7 @@ using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App.Services
 {
-    public class AdminService : Admin_Interface
+    public class AdminService : AdminInterface
     {
         private readonly Tkt_Dbcontext _context;
 

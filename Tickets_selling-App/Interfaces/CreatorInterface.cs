@@ -10,7 +10,7 @@ namespace Tickets_selling_App.Interfaces
         //Ticket Crud
         string AddTicket(CreateTicketDto ticket,int id);
         string UpdateTicket(CreateTicketDto ticket);
-        void DeleteTicket(int TicketId);
+        bool DeleteTicket(int TicketId);
         GetTicketDto MatchingTicket(int ticketid);
         public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID, int pageindex);
         public ICollection<GetTicketDto> GetMyExpiredTickets(int AccountID, int pageindex);

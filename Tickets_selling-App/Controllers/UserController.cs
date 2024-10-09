@@ -13,9 +13,9 @@ namespace Tickets_selling_App.Controllers
     
     public class UserController : Controller
     {
-        private readonly User_Interface _User;
+        private readonly UserInterface _User;
         private readonly Tkt_Dbcontext _context;
-        public UserController(User_Interface customer,Tkt_Dbcontext tkt_Dbcontext)
+        public UserController(UserInterface customer,Tkt_Dbcontext tkt_Dbcontext)
         { 
             _User = customer;
             _context = tkt_Dbcontext;
@@ -50,25 +50,89 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong {ex.Message}");
             }
         }
-        //________________________Login Registration servicres
 
-        [HttpPost("/Registration Validation")]
-        public async Task<IActionResult> Registration_Validations([FromBody] string email)
+        //________________________Login Registration services
+
+        [HttpPost("/email-validation/{email}")]
+        public IActionResult EmailValidation(string email)
+        {
+             if (!string.IsNullOrEmpty(email)) 
+             {
+                 bool response = _User.EmailValidation(email);
+                 if (response)
+                 {
+                     var successMessage = new Client_Response
+                     {
+                         Success = true,
+                     };
+                     return Ok(successMessage);
+                 }
+                 var failMessage = new Client_Response
+                 {
+                     Success = false,
+                 };
+                 return Ok(failMessage);
+             }
+             else
+             {
+                 return BadRequest("User is null");
+             }
+        }
+
+        [HttpPost("/passcode-confirmation")]
+        public IActionResult passcodeConfirmation(RegistrationDTO user)
+        {
+            bool response = _User.passcodeConfirmation(user);
+            if (response)
+            {
+                var message = new Client_Response
+                {
+                    Success = true,
+                };
+                return Ok(message);
+            }
+            else
+            {
+                var message = new Client_Response
+                {
+                    Success = false,
+                };
+                return Ok(message);
+            }
+        }
+
+        [HttpPost("/user-registration")]
+        public IActionResult Registration([FromBody] RegistrationDTO user)
         {
             try
             {
-                if (email != null)
+                if (user.Email != null && user.password!=null)
                 {
-                    string response = _User.Email_Validation(email);
-                    var NewMessage = new Client_Response
+                    bool response = _User.userRegistration(user);
+                    if (response)
                     {
-                        Message = response,
+                        var successMessage = new Client_Response
+                        {
+                            Message = "You successfully registered!",
+                            Success = true,
+                        };
+                        return Ok(successMessage);
+                    }
+                    var failMessage = new Client_Response
+                    {
+                        Message = "something went wrong!",
+                        Success = false,
                     };
-                    return Ok(NewMessage);
+                    return Ok(failMessage);
                 }
                 else
                 {
-                    return BadRequest("User is null");
+                    var failMessage = new Client_Response
+                    {
+                        Message = "can't register User!",
+                        Success = false,
+                    };
+                    return BadRequest(failMessage);
                 }
             }
             catch (Exception ex)
@@ -76,42 +140,11 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest($"Something went wrong: {ex.Message}");
             }
         }
-        [HttpPost("/Registration")]
-        public async Task<IActionResult> Registration([FromBody] RegistrationRequest request)
-        {
-            try
-            {
-                if (request.User != null)
-                {
-                    string response = _User.Registration(request.User, request.Passcode);
-                    var NewMessage = new Client_Response
-                    {
-                        Message = response,
-                    };
-                    return Ok(NewMessage);
-                }
-                else
-                {
-                    return BadRequest("can't register User does not exist!");
-                }
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong: {ex.Message}");
-            }
-        }
 
-        public class RegistrationRequest
+        [HttpPost("/login")]
+        public IActionResult Login(LoginDto model)
         {
-            public RegistrationDTO User { get; set; }
-            public int Passcode { get; set; }
-        }
-
-
-        [HttpPost("/Login")]
-        public async Task<ActionResult<string>> Login([FromBody] LoginDto model)
-        {
-            User User_credentials = _User.Login(model);
+            var User_credentials = _User.Login(model);
             if (User_credentials != null)
             {
                 string token = _User.CreateToken(User_credentials);

@@ -47,7 +47,7 @@ namespace Tickets_selling_App.Controllers
                     };
                     return Ok(message);
                 }
-            }catch (Exception ex)
+            } catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -58,35 +58,42 @@ namespace Tickets_selling_App.Controllers
         [Authorize(Policy = "CreatorOnly")]
         public IActionResult Creator_account_Registration(AccountCreationTDO accountName)
         {
-            try
+            var userId = User.FindFirst("UserID")?.Value;
+            var creatoraccount = _creator.Creator_Account_Register(accountName.AccountName, Convert.ToInt32(userId));
+            if (creatoraccount)
             {
-                var userId = User.FindFirst("UserID")?.Value;
-                var creatoraccount = _creator.Creator_Account_Register(accountName.AccountName, Convert.ToInt32(userId));
-                if (creatoraccount)
+                var message = new Client_Response
                 {
-                    var message = new Client_Response
+                    Message = "You Created Account Successfully",
+                    Success = true,
+                };
+                var ImidiateLogin = _creator.createdAccountCredentials(accountName.AccountName, Convert.ToInt32(userId));
+                if (ImidiateLogin != null)
+                {
+                    var credential = new Client_Response
                     {
                         Message = "You Created Account Successfully",
                         Success = true,
+                        accountID = ImidiateLogin.Id
                     };
-                    var ImidiateLogin = _creator.createdAccountCredentials(accountName.AccountName, Convert.ToInt32(userId));
-                    if (ImidiateLogin != null)
-                    {
-                        return Ok(ImidiateLogin);
-                    }
-                    return Ok(message);
+                   return Ok(credential);
+
                 }
-                else
-                {
-                    return BadRequest();
-                }
+
+                return Ok(message);
             }
-            catch(Exception ex)
+            else
             {
-                return BadRequest(ex.Message);  
+                var message = new Client_Response
+                {
+                    Message = "Account with given Name Already exists!",
+                    Success = false,
+                };
+                return Ok(message);
             }
         }
         [HttpGet("/creator-account-login/{accountid}")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult Creator_Account_Login(int accountid)
         {
             try
@@ -110,6 +117,7 @@ namespace Tickets_selling_App.Controllers
             }
         }
         [HttpGet("/my-creator-account")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult creatorAccounts()
         {
             try
@@ -169,8 +177,8 @@ namespace Tickets_selling_App.Controllers
             }
             return null;
         }
-        [HttpGet("account-managment")]
-        [Authorize(Policy = "AccountAdminOnly")]
+        [HttpGet("account-management")]
+        [Authorize(Policy = "CreatorOnly")]
         public IActionResult AccountManagment()
         {
             var AccountID = User.FindFirst("AccountID")?.Value;
@@ -220,7 +228,12 @@ namespace Tickets_selling_App.Controllers
                    string response = _creator.AddTicket(ticket, Convert.ToInt32(AccountID));
                    Response = response;
                 }
-                return Ok(new { message = Response });
+                var ReturnMessage = new Client_Response
+                {
+                    Message = Response,
+                    Success = true,
+                };
+                return Ok(ReturnMessage);
             }
             catch (Exception ex)
             {
@@ -249,7 +262,12 @@ namespace Tickets_selling_App.Controllers
                     string response = _creator.UpdateTicket(ticket);
                     Response = response;
                 }
-                return Ok(new { message = Response });
+                var ReturnMessage = new Client_Response
+                {
+                    Message = Response,
+                    Success = true,
+                };
+                return Ok(ReturnMessage);
             }
             catch (Exception ex)
             {
@@ -275,8 +293,22 @@ namespace Tickets_selling_App.Controllers
         {
             try
             {
-                _creator.DeleteTicket(id);
-                return Ok("Ticket Successfully Deleted!");
+                bool isRemoved = _creator.DeleteTicket(id);
+                if (isRemoved)
+                {
+                    var Returmessage = new Client_Response
+                    {
+                        Message = "Ticket Successfully Deleted!",
+                        Success = true,
+                    };
+                    return Ok(Returmessage);
+                }
+                var ReturmessageFalse = new Client_Response
+                {
+                    Message = "Could not find ticket to delete!",
+                    Success = true,
+                };
+                return NotFound(ReturmessageFalse);
             }
             catch (Exception ex)
             {

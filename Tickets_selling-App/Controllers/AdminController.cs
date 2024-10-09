@@ -11,8 +11,8 @@ namespace Tickets_selling_App.Controllers
     [ApiController]
     public class AdminController : Controller
     {
-        private readonly Admin_Interface _admin;
-        public AdminController(Admin_Interface admin)
+        private readonly AdminInterface _admin;
+        public AdminController(AdminInterface admin)
         {
             _admin = admin;
         }

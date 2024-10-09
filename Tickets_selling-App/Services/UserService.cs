@@ -8,15 +8,16 @@ using Tickets_selling_App.Dtos.User;
 using Tickets_selling_App.Dtos.TicketDTO;
 using System.Collections.Immutable;
 using Tickets_selling_App.Dtos.Ticket;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace Tickets_selling_App.Services
 {
-    public class UserServicre : User_Interface
+    public class UserServicre : UserInterface
     {
         private readonly Tkt_Dbcontext _context;
         private readonly IConfiguration _configuration;
-        private readonly Gmail_Interface _gmail;
-        public UserServicre(Tkt_Dbcontext tkt_Dbcontext, IConfiguration configuration, Gmail_Interface gmail)
+        private readonly GmailInterface _gmail;
+        public UserServicre(Tkt_Dbcontext tkt_Dbcontext, IConfiguration configuration, GmailInterface gmail)
         {
             _context = tkt_Dbcontext;
             _configuration = configuration;
@@ -129,89 +130,77 @@ namespace Tickets_selling_App.Services
             return response;
         }
         //Email validation----------------------------------------------
-        public string Email_Validation(string Email)
+        public bool EmailValidation(string Email)
         {
-            string response = "";
-            bool CheckEmail = _context.User.Any(x => x.Email == Email);
-            if (Email != null)
-            {
-                if (CheckEmail)
-                {
-                    response = "An account has already been created using this email address. Please log in to your account or register with a different email <3 .";
-                }
-                else
-                {
-                    Random random = new Random();
-                    int passcode = random.Next(100000, 999999);
-
-                    var NewEmailOrNot = _context.Emailvalidation.FirstOrDefault(x => x.Email == Email);
-                    if (NewEmailOrNot != null)
-                    {
-                        NewEmailOrNot.Passcode = passcode;
-                        NewEmailOrNot.Expiration = DateTime.Now.AddMinutes(5);
-                        _context.SaveChanges();
-                    }
-                    else
-                    {
-                        var ValidateEmail = new EmailValidation
-                        {
-                            Email = Email,
-                            Passcode = passcode,
-                            Expiration = DateTime.Now.AddMinutes(2),
-                        };
-                        _context.Emailvalidation.Add(ValidateEmail);
-                        _context.SaveChanges();
-                    }
-                    _gmail.Email_Validation(Email, passcode);
-                    response = "We have sent you 6 digits passcode to your email address, please enter below to finish registration!";
-                }
+             bool CheckEmail = _context.User.Any(x => x.Email == Email);
+             if (CheckEmail)
+             {
+                return false;
+             }
+             else
+             {
+                 Random random = new Random();
+                 int passcode = random.Next(100000, 999999);
+                 var NewEmailOrNot = _context.Emailvalidation.FirstOrDefault(x => x.Email == Email);
+                 if (NewEmailOrNot != null)
+                 {
+                     NewEmailOrNot.Passcode = passcode;
+                     NewEmailOrNot.Expiration = DateTime.Now.AddMinutes(5);
+                     _context.SaveChanges();
+                 }
+                 else
+                 {
+                     var ValidateEmail = new EmailValidation
+                     {
+                         Email = Email,
+                         Passcode = passcode,
+                         Expiration = DateTime.Now.AddMinutes(5),
+                     };
+                     _context.Emailvalidation.Add(ValidateEmail);
+                     _context.SaveChanges();
+                 }
+                return true;
             }
-            return response;
         }
         //Registration----------------------------------------------
-        public string Registration(RegistrationDTO user, int passcode)
+        public bool userRegistration(RegistrationDTO user)
+        {
+            try
+            {
+                string hashedpassword = HashPassword(user.password);
+                var registeredUser = new User
+                {
+                    Email = user.Email,
+                    Password = hashedpassword,
+                    Role = "User",
+                };
+                _context.User.Add(registeredUser);
+                _context.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        public bool passcodeConfirmation(RegistrationDTO user)
         {
             try
             {
                 var validEmail = _context.Emailvalidation
-                    .FirstOrDefault(x => x.Email == user.Email && x.Passcode == passcode);
-
-                if (validEmail == null)
+                    .Any(x => x.Email == user.Email && x.Passcode == user.passcode);
+                if (validEmail)
                 {
-                    return "Passcode is incorrect. Please try sending it again!";
+                    return true; 
                 }
-
-                if (DateTime.Now >= validEmail.Expiration)
-                {
-                    return "Passcode expired. Please try again!";
-                }
-
-                var emailRegistered = _context.User.Any(x => x.Email == user.Email);
-                if (emailRegistered)
-                {
-                    return "Email already registered.";
-                }
-
-                var hashedPassword = HashPassword(user.Password);
-                var newUser = new User
-                {
-                    Email = user.Email,
-                    LastName = user.LastName,
-                    Name = user.Name,
-                    Password = hashedPassword,
-                    Role = "User",
-                };
-
-                _context.User.Add(newUser);
-                _context.SaveChanges();
-
-                return $"{user.Name}, you have successfully registered to our app!";
+                return false;
             }
             catch (Exception ex)
             {
-                return $"An error occurred: {ex.Message}";
+                return false; 
             }
         }
+
 
         public string HashPassword(string password)
         {
@@ -229,12 +218,12 @@ namespace Tickets_selling_App.Services
         //Login----------------------------------------------
         public User Login(LoginDto userDto)
         {
-            var user = _context.User.FirstOrDefault(u => u.Email == userDto.Email);
+            var user = _context.User.FirstOrDefault(u => u.Email == userDto.email);
 
             if (user != null)
             {
                 string hashedPassword = user.Password;
-                bool isPasswordCorrect = VerifyPassword(userDto.Password, hashedPassword);
+                bool isPasswordCorrect = VerifyPassword(userDto.password, hashedPassword);
                 if (isPasswordCorrect)
                 {
                     return user;

@@ -8,7 +8,7 @@ using static QRCoder.PayloadGenerator;
 
 namespace Tickets_selling_App.Services
 {
-    public class GmailService : Gmail_Interface
+    public class GmailService : GmailInterface
     {
         public async Task SendEmailAsync(string email, string qrCodeData)
         {

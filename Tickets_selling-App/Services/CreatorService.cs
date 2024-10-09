@@ -55,7 +55,6 @@ namespace Tickets_selling_App.Services
             }
             return false;
         }
-
         public bool Creator_Account_Register(string accName, int userid)
         {
             try
@@ -64,7 +63,7 @@ namespace Tickets_selling_App.Services
                 if (creator != null)
                 {
                     var accountExists = _context.CreatorAccount
-                        .FirstOrDefault(x => x.UserName == accName);
+                        .FirstOrDefault(x => x.UserName == accName && x.CreatorID == userid);
 
                     if (accountExists == null)
                     {
@@ -74,9 +73,9 @@ namespace Tickets_selling_App.Services
                             Logo = "",
                             UserName = accName,
                         };
+
                         _context.CreatorAccount.Add(newAccount);
                         _context.SaveChanges();
-
                         var createdAccount = _context.CreatorAccount
                             .FirstOrDefault(x => x.UserName == accName && x.CreatorID == userid);
 
@@ -85,7 +84,7 @@ namespace Tickets_selling_App.Services
                             var role = new CreatorAccountRoles()
                             {
                                 AccountID = createdAccount.Id,
-                                Role = "CreatorAdmin",
+                                Role = "Creator",
                                 UserID = userid,
                             };
                             _context.AccountRoles.Add(role);
@@ -96,6 +95,10 @@ namespace Tickets_selling_App.Services
                             return false;
                         }
                     }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -104,6 +107,7 @@ namespace Tickets_selling_App.Services
                 return false;
             }
         }
+
 
         public CreatorAccount createdAccountCredentials(string accName, int creatorid )
         {
@@ -397,14 +401,16 @@ namespace Tickets_selling_App.Services
             return response;
         }
 
-        public void DeleteTicket(int TicketId)
+        public bool DeleteTicket(int TicketId)
         {
             var TicketToDelete = _context.Tickets.FirstOrDefault(x => x.ID == TicketId);
             if (TicketToDelete != null)
             {
                 _context.Tickets.Remove(TicketToDelete);
                 _context.SaveChanges();
+                return true;
             }
+            return false;
         }
         public GetTicketDto MatchingTicket(int ticketid)
         {

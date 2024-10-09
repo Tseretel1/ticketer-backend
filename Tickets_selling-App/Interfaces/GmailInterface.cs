@@ -2,7 +2,7 @@
 
 namespace Tickets_selling_App.Interfaces
 {
-    public interface Gmail_Interface
+    public interface GmailInterface
     {
         public Task SendEmailAsync(string email,string qrCodeData);
         public Task Password_Restoration (string mail, int Passcode);

@@ -4,7 +4,7 @@ using Tickets_selling_App.Models;
 
 namespace Tickets_selling_App.Interfaces
 {
-    public interface Admin_Interface
+    public interface AdminInterface
     {
         string AddTicket(CreateTicketDto ticket,int id);
         void DeleteTicket (int TicketId);
