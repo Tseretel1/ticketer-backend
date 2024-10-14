@@ -4,14 +4,13 @@ namespace Tickets_selling_App.Interfaces
 {
     public interface NotauthorisedInterface
     {
-        ICollection<GetTicketDto> GetAll_Tickets();
+        ICollection<GetTicketDto> AllMostPopularTickets();
         ICollection<GetTicketDto> MatchingTicket(int ticketid);
-        ICollection<GetTicketDto> PopularEventsCover();
         ICollection<GetTicketDto> MostPopularTickets();
+        ICollection<GetTicketDto> GetOtherGenreTickets();
         ICollection<GetTicketDto> UpcomingTickets();
-        ICollection<GetTicketDto> TheaterTickets();
-
-        ICollection<GetTicketDto> getbyCategories(string genre);
+        ICollection<GetTicketDto> getByGenre(string genre);
+        ICollection<GetTicketDto> MainFilter(string title);
         public ICollection<GetTicketDto> searchbyTitle(string title);
         bool PlusViewCount (int id);
     }

@@ -350,7 +350,7 @@ namespace Tickets_selling_App.Services
                         Photo = ticket.Photo,
                         PublisherID = id,
                         ViewCount = 0,
-                        
+                        TicketCount = ticket.TicketCount,
                     };
 
                     _context.Tickets.Add(newTicket);
@@ -381,15 +381,15 @@ namespace Tickets_selling_App.Services
                 {
                     return "Error: Ticket not found";
                 }
-                TicketToUpdate.Title = ticket.Title;
-                TicketToUpdate.Price = ticket.Price;
-                TicketToUpdate.Activation_Date = ticket.Activation_Date;
-                TicketToUpdate.Expiration_Date = ticket.Expiration_Date;
-                TicketToUpdate.Description = ticket.Description;
-                TicketToUpdate.Genre = ticket.Genre;
-                TicketToUpdate.Photo = ticket.Photo;
-                TicketToUpdate.TicketCount = ticket.TicketCount;
-                _context.SaveChanges();
+                    TicketToUpdate.Title = ticket.Title;
+                    TicketToUpdate.Price = ticket.Price;
+                    TicketToUpdate.Activation_Date = ticket.Activation_Date;
+                    TicketToUpdate.Expiration_Date = ticket.Expiration_Date;
+                    TicketToUpdate.Description = ticket.Description;
+                    TicketToUpdate.Genre = ticket.Genre;
+                    TicketToUpdate.Photo = ticket.Photo;
+                    TicketToUpdate.TicketCount = ticket.TicketCount;
+                    _context.SaveChanges();
 
                 response = "Ticket has been modified successfully";
             }

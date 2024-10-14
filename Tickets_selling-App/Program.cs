@@ -95,11 +95,7 @@ app.UseCors("AllowAllOrigins");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Photos")),
-    RequestPath = "/Photos"
-});
+
 
 // Apply CORS policies
 app.UseCors("AllowAngularLocalhost");

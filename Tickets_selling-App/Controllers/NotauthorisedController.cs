@@ -15,22 +15,6 @@ namespace Tickets_selling_App.Controllers
             _notAuth = notAuth;
         }
 
-        [HttpGet("/all-tickets")]
-        public IActionResult GetAlltickets()
-        {
-            try
-            {
-                var Tickets = _notAuth.GetAll_Tickets();
-
-                if (Tickets == null || !Tickets.Any())
-                    return NotFound("Ticket not Found");
-                return Ok(Tickets);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong {ex.Message}");
-            }
-        }
         [HttpGet("/matching-ticket/{ticketId}")]
         public ActionResult<GetTicketDto> GetMatchingTicket(int ticketId)
         {
@@ -43,16 +27,33 @@ namespace Tickets_selling_App.Controllers
         }
 
 
-
-        [HttpGet("/popular-events")]
-        public IActionResult PopularEventsCover()
+        [HttpGet("/ticket-categories{filter}")]
+        public IActionResult ticketFilterMain(string filter)
         {
             try
             {
-                var Tickets = _notAuth.PopularEventsCover();
+                var Tickets = _notAuth.MainFilter(filter);
 
                 if (Tickets == null || !Tickets.Any())
-                    return NotFound("Event not Found");
+                    return Ok("Event not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+
+
+        [HttpGet("/all-popular-tickets")]
+        public IActionResult getAllMostPopularTickets()
+        {
+            try
+            {
+                var Tickets = _notAuth.AllMostPopularTickets();
+
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Ticket not Found");
                 return Ok(Tickets);
             }
             catch (Exception ex)
@@ -67,6 +68,23 @@ namespace Tickets_selling_App.Controllers
             try
             {
                 var Tickets = _notAuth.MostPopularTickets();
+
+                if (Tickets == null || !Tickets.Any())
+                    return NotFound("Event not Found");
+                return Ok(Tickets);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+
+        [HttpGet("/other-tickets")]
+        public IActionResult otherTickets()
+        {
+            try
+            {
+                var Tickets = _notAuth.GetOtherGenreTickets();
 
                 if (Tickets == null || !Tickets.Any())
                     return NotFound("Event not Found");
@@ -98,44 +116,13 @@ namespace Tickets_selling_App.Controllers
             }
         }
 
-        [HttpGet("/theater-tickets")]
-        public IActionResult theaterTickets()
-        {
-            try
-            {
-                var Tickets = _notAuth.TheaterTickets();
 
-                if (Tickets == null || !Tickets.Any())
-                    return NotFound("Event not Found");
-                return Ok(Tickets);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong {ex.Message}");
-            }
-        }
-
-        [HttpGet("/filter-by-category/{categoryName}")]
-        public IActionResult categoryFilter(string categoryName)
+        [HttpGet("/search-by-title/{title}")]
+        public IActionResult searchTickets(string title)
         {
             try
             {
-                var Tickets = _notAuth.getbyCategories(categoryName);
-                if (Tickets == null || !Tickets.Any())
-                    return NotFound("Event not Found");
-                return Ok(Tickets);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest($"Something went wrong {ex.Message}");
-            }
-        }
-        [HttpGet("/search-by-title/{categoryName}")]
-        public IActionResult searchTickets(string categoryName)
-        {
-            try
-            {
-                var Tickets = _notAuth.getbyCategories(categoryName);
+                var Tickets = _notAuth.searchbyTitle(title);
 
                 if (Tickets == null || !Tickets.Any())
                     return NotFound("Event not Found");
