@@ -1,13 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.EntityFrameworkCore.SqlServer.Update.Internal;
 using System.Reflection.Metadata;
 using System.Text;
 using Tickets_selling_App.Dtos.Creator;
+using Tickets_selling_App.Dtos.Ticket;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
 using Tickets_selling_App.User_Side_Response;
+using static Tickets_selling_App.Controllers.CreatorController;
 
 namespace Tickets_selling_App.Controllers
 {
@@ -31,7 +34,7 @@ namespace Tickets_selling_App.Controllers
                 var register = _creator.register_as_creator(Convert.ToInt32(userId), cred);
                 if (register)
                 {
-                    var message = new Client_Response
+                    var message = new Client_Response<object>
                     {
                         Message = "Admin will check and verify you!",
                         Success = true,
@@ -40,7 +43,7 @@ namespace Tickets_selling_App.Controllers
                 }
                 else
                 {
-                    var message = new Client_Response
+                    var message = new Client_Response<object>
                     {
                         Message = "You are already registered, wait for admin to verify you!",
                         Success = false,
@@ -62,7 +65,7 @@ namespace Tickets_selling_App.Controllers
             var creatoraccount = _creator.Creator_Account_Register(accountName.AccountName, Convert.ToInt32(userId));
             if (creatoraccount)
             {
-                var message = new Client_Response
+                var message = new Client_Response<object>
                 {
                     Message = "You Created Account Successfully",
                     Success = true,
@@ -70,7 +73,7 @@ namespace Tickets_selling_App.Controllers
                 var ImidiateLogin = _creator.createdAccountCredentials(accountName.AccountName, Convert.ToInt32(userId));
                 if (ImidiateLogin != null)
                 {
-                    var credential = new Client_Response
+                    var credential = new Client_Response<object>
                     {
                         Message = "You Created Account Successfully",
                         Success = true,
@@ -84,7 +87,7 @@ namespace Tickets_selling_App.Controllers
             }
             else
             {
-                var message = new Client_Response
+                var message = new Client_Response<object>
                 {
                     Message = "Account with given Name Already exists!",
                     Success = false,
@@ -102,7 +105,7 @@ namespace Tickets_selling_App.Controllers
                 var checkCredentials = _creator.Creator_Account_Login(accountid, Convert.ToInt32(userId));
                 if (checkCredentials != null)
                 {
-                    var ReturToken = new Client_Response
+                    var ReturToken = new Client_Response<object>
                     {
                         Message = checkCredentials,
                         Success = true,
@@ -150,6 +153,18 @@ namespace Tickets_selling_App.Controllers
             }
             return null;
         }
+        [HttpGet("all-active-tickets")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult GetAllactiveTickets(int pageindex)
+        {
+            var userId = User.FindFirst("AccountID")?.Value;
+            var MyTickets = _creator.GetAllActiveTickets(Convert.ToInt32(userId));
+            if (MyTickets != null)
+            {
+                return Ok(MyTickets);
+            }
+            return null;
+        }
         [HttpGet("expired-tickets")]
         [Authorize(Policy = "EveryRole")]
         public IActionResult expiredTickets(int pageindex)
@@ -170,13 +185,74 @@ namespace Tickets_selling_App.Controllers
         {
             var AccountID = User.FindFirst("AccountID")?.Value;
             var userid = User.FindFirst("UserID")?.Value;
-            var MyTickets = _creator.GetMyProfile(Convert.ToInt32(AccountID), Convert.ToInt32(userid));
-            if (MyTickets != null)
+            var myProfile = _creator.GetMyProfile(Convert.ToInt32(AccountID), Convert.ToInt32(userid));
+            if (myProfile != null)
             {
-                return Ok(MyTickets);
+                return Ok(myProfile);
             }
             return null;
         }
+
+        public class UpdateProfilePhoto
+        {
+            public string Photo { get; set; }
+        }
+
+        [HttpPut("edit-profile-photo")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult editProfilePhoto([FromBody] UpdateProfilePhoto request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Photo))
+            {
+                return BadRequest(new { Message = "Name cannot be empty", Success = false });
+            }
+
+            var AccountID = User.FindFirst("AccountID")?.Value;
+            bool isUpdated = _creator.editProfilePhoto(Convert.ToInt32(AccountID), request.Photo);
+
+            if (isUpdated)
+            {
+                return Ok(new Client_Response<object>
+                {
+                    Message = "Update is successful",
+                    Success = true
+                });
+            }
+
+            return BadRequest(new { Message = "Could not update", Success = false });
+        }
+
+
+
+        public class UpdateProfileRequest
+        {
+            public string Name { get; set; }
+        }
+        [HttpPut("edit-profile-name")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult editProfileName([FromBody] UpdateProfileRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                return BadRequest(new { Message = "Name cannot be empty", Success = false });
+            }
+
+            var AccountID = User.FindFirst("AccountID")?.Value;
+            bool isUpdated = _creator.editProfileName(Convert.ToInt32(AccountID), request.Name);
+
+            if (isUpdated)
+            {
+                return Ok(new Client_Response<object>
+                {
+                    Message = "Update is successful",
+                    Success = true
+                });
+            }
+
+            return BadRequest(new { Message = "Could not update", Success = false });
+        }
+
+
         [HttpGet("account-management")]
         [Authorize(Policy = "CreatorOnly")]
         public IActionResult AccountManagment()
@@ -228,7 +304,7 @@ namespace Tickets_selling_App.Controllers
                    string response = _creator.AddTicket(ticket, Convert.ToInt32(AccountID));
                    Response = response;
                 }
-                var ReturnMessage = new Client_Response
+                var ReturnMessage = new Client_Response<object>
                 {
                     Message = Response,
                     Success = true,
@@ -262,7 +338,7 @@ namespace Tickets_selling_App.Controllers
                     string response = _creator.UpdateTicket(ticket);
                     Response = response;
                 }
-                var ReturnMessage = new Client_Response
+                var ReturnMessage = new Client_Response<object>   
                 {
                     Message = Response,
                     Success = true,
@@ -296,14 +372,14 @@ namespace Tickets_selling_App.Controllers
                 bool isRemoved = _creator.DeleteTicket(id);
                 if (isRemoved)
                 {
-                    var Returmessage = new Client_Response
+                    var Returmessage = new Client_Response<object>
                     {
                         Message = "Ticket Successfully Deleted!",
                         Success = true,
                     };
                     return Ok(Returmessage);
                 }
-                var ReturmessageFalse = new Client_Response
+                var ReturmessageFalse = new Client_Response<object>
                 {
                     Message = "Could not find ticket to delete!",
                     Success = true,
@@ -336,7 +412,20 @@ namespace Tickets_selling_App.Controllers
         [Authorize(Policy = "EveryRole")]
         public IActionResult ScannTicket(string ticketId)
         {
-            var result = _creator.ScanTicket(ticketId);
+            var accountid = User.FindFirst("AccountID")?.Value;
+            var result = _creator.checkTicketScann(ticketId, Convert.ToInt32(accountid));
+            if (result != null)
+            {
+                return Ok(result);
+            }
+            return Ok();
+        }
+        [HttpGet("one-time-scann/{ticketId}")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult ScannTicketOneTime(string ticketId)
+        {
+            var accountid = User.FindFirst("AccountID")?.Value;
+            var result = _creator.oneTimeScann(ticketId, Convert.ToInt32(accountid));
             if (result != null)
             {
                 return Ok(result);

@@ -4,9 +4,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Tickets_selling_App.Dtos.Creator;
+using Tickets_selling_App.Dtos.Ticket;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
 using Tickets_selling_App.Models;
+using Tickets_selling_App.User_Side_Response;
 
 namespace Tickets_selling_App.Services
 {
@@ -189,6 +191,36 @@ namespace Tickets_selling_App.Services
         }
 
         //  ---------------------Managment services  --------------------------
+        public ICollection<GetTicketDto> GetAllActiveTickets(int AccountID)
+        {
+            var query = from ticket in _context.Tickets.OrderByDescending(x => x.Activation_Date)
+                        join creator in _context.CreatorAccount
+                        on ticket.PublisherID equals creator.Id
+                        where ticket.PublisherID == AccountID
+                        let SoldTicketCount = _context.SoldTickets.Count(ti => ti.TicketID == ticket.ID)
+                        where ticket.PublisherID == AccountID
+                        select new GetTicketDto
+                        {
+                            ID = ticket.ID,
+                            Activation_Date = ticket.Activation_Date,
+                            Description = ticket.Description,
+                            Expiration_Date = ticket.Expiration_Date,
+                            Genre = ticket.Genre,
+                            Photo = ticket.Photo,
+                            Price = ticket.Price,
+                            Title = ticket.Title,
+                            sold = SoldTicketCount,
+                            Publisher = new CreatorAccountDTO
+                            {
+                                UserName = creator.UserName,
+                                Logo = creator.Logo,
+                            },
+                            ViewCount = ticket.ViewCount,
+                            TicketCount = ticket.TicketCount,
+                        };
+
+            return query.Where(x => x.Expiration_Date > DateTime.Now).OrderByDescending(x => x.sold).ToList();
+        }
         public ICollection<GetTicketDto> GetMyActiveTickets(int AccountID, int pageindex)
         {
             int GetticketCount = 10;
@@ -273,6 +305,37 @@ namespace Tickets_selling_App.Services
                 return combinedProfile;
             }
             return null;
+        }
+        public bool editProfilePhoto(int accountId, string photo)
+        {
+            var account = _context.CreatorAccount.FirstOrDefault(x => x.Id == accountId);
+
+            if (account != null)
+            {
+                if (photo != null)
+                {
+                    account.Logo = photo;
+                    _context.SaveChanges();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        public bool editProfileName(int accountId, string name)
+        {
+            var account = _context.CreatorAccount.FirstOrDefault(x => x.Id == accountId);
+
+            if (account != null)
+            {
+                if (name != null)
+                {
+                    account.UserName = name;
+                    _context.SaveChanges();
+                    return true;
+                }
+            }
+            return false;
         }
 
 
@@ -388,7 +451,7 @@ namespace Tickets_selling_App.Services
                     TicketToUpdate.Description = ticket.Description;
                     TicketToUpdate.Genre = ticket.Genre;
                     TicketToUpdate.Photo = ticket.Photo;
-                    TicketToUpdate.TicketCount = ticket.TicketCount;
+                    TicketToUpdate.TicketCount += ticket.TicketCount;
                     _context.SaveChanges();
 
                 response = "Ticket has been modified successfully";
@@ -437,6 +500,7 @@ namespace Tickets_selling_App.Services
                         id = tc.ticket.PublisherID,
                     },
                     ViewCount = tc.ticket.ViewCount,
+                    TicketCount = tc.ticket.TicketCount
                 })
                 .FirstOrDefault();
 
@@ -469,41 +533,84 @@ namespace Tickets_selling_App.Services
 
 
         //Qr Scanner Services
-        public ScanedTicketDTO ScanTicket(string ticketid)
+
+        public Client_Response<ScanedTicketDTO> checkTicketScann(string ticketid, int accountid)
         {
             var FoundTicket = _context.SoldTickets.FirstOrDefault(x => x.UniqueTicketID == ticketid);
             if (FoundTicket == null)
             {
-                var news = new ScanedTicketDTO
-                {
-                    isExpired = false,
-                    TicketTitle = "ticket Could not be found",
-                };
-                return news;
+                return null;
             }
-            var FoundUser = _context.User.FirstOrDefault(x => x.ID == FoundTicket.UserID);
-            if (FoundUser != null)
+            var isticketMine = _context.Tickets.FirstOrDefault(x => x.ID == FoundTicket.TicketID && x.PublisherID == accountid);
+            if (isticketMine != null)
             {
-                var Ticket = _context.Tickets.FirstOrDefault(x => x.ID == FoundTicket.TicketID);
-                bool Expired = false;   
-                if(Ticket.Expiration_Date < DateTime.Now)
+                var FoundUser = _context.User.FirstOrDefault(x => x.ID == FoundTicket.UserID);
+                if (FoundUser != null)
                 {
-                    Expired = true;
-                };
-                var Ticketqrd = new ScanedTicketDTO
-                {
-                    UserName = FoundUser.Name + " " + FoundUser.LastName,
-                    isExpired = Expired,
-                    IsActive = FoundTicket.IsActive,
-                    TicketTitle = Ticket.Title,
-                    ActivationDate = Ticket.Activation_Date,
-                    ExpirationDate = Ticket.Expiration_Date,
-                    TicketPhoto = Ticket.Photo,
-                };
-      
-                return Ticketqrd;
-            }      
+                    bool Expired = false;
+                    if (isticketMine.Expiration_Date < DateTime.Now)
+                    {
+                        Expired = true;
+                    };
+                    var Ticketqrd = new ScanedTicketDTO
+                    {
+                        UserName = FoundUser.Name + " " + FoundUser.LastName,
+                        isExpired = Expired,
+                        IsActive = FoundTicket.IsActive,
+                        TicketTitle = isticketMine.Title,
+                        ActivationDate = isticketMine.Activation_Date,
+                        ExpirationDate = isticketMine.Expiration_Date,
+                        TicketPhoto = isticketMine.Photo,
+                    };
+                    var response = new Client_Response<ScanedTicketDTO>
+                    {
+                        respObject = Ticketqrd
+                    };
+                    return response;
+                }
+            }
             return null;
         }
+        public Client_Response<ScanedTicketDTO> oneTimeScann(string ticketid,int accountid)
+        {
+            var FoundTicket = _context.SoldTickets.FirstOrDefault(x => x.UniqueTicketID == ticketid);
+            if (FoundTicket == null)
+            {
+                return null;
+            }
+            var isticketMine = _context.Tickets.FirstOrDefault(x => x.ID == FoundTicket.TicketID && x.PublisherID == accountid);
+            if (isticketMine != null)
+            {
+                var FoundUser = _context.User.FirstOrDefault(x => x.ID == FoundTicket.UserID);
+                if (FoundUser != null)
+                {
+                    bool Expired = false;
+                    if (isticketMine.Expiration_Date < DateTime.Now)
+                    {
+                        Expired = true;
+                    };
+                    var Ticketqrd = new ScanedTicketDTO
+                    {
+                        UserName = FoundUser.Name + " " + FoundUser.LastName,
+                        isExpired = Expired,
+                        IsActive = FoundTicket.IsActive,
+                        TicketTitle = isticketMine.Title,
+                        ActivationDate = isticketMine.Activation_Date,
+                        ExpirationDate = isticketMine.Expiration_Date,
+                        TicketPhoto = isticketMine.Photo,
+                    };
+                    FoundTicket.IsActive = false;
+                    _context.SaveChanges();
+                    var response = new Client_Response<ScanedTicketDTO>
+                    {
+                        respObject = Ticketqrd
+                    };
+                    return response;
+                }
+            }
+            return null;
+        }
+
+
     }
 }

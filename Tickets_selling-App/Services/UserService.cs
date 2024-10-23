@@ -289,7 +289,7 @@ namespace Tickets_selling_App.Services
             }
             var tickets = _context.Tickets
                 .Where(t => soldTickets.Select(st => st.TicketID).Contains(t.ID)
-                             && t.Activation_Date > DateTime.Now)
+                             && t.Expiration_Date > DateTime.Now)
                 .Select(t => new GetTicketDto
                 {
                     ID = t.ID,

@@ -61,13 +61,13 @@ namespace Tickets_selling_App.Controllers
                  bool response = _User.EmailValidation(email);
                  if (response)
                  {
-                     var successMessage = new Client_Response
+                     var successMessage = new Client_Response<object>
                      {
                          Success = true,
                      };
                      return Ok(successMessage);
                  }
-                 var failMessage = new Client_Response
+                 var failMessage = new Client_Response<object>
                  {
                      Success = false,
                  };
@@ -85,7 +85,7 @@ namespace Tickets_selling_App.Controllers
             bool response = _User.passcodeConfirmation(user);
             if (response)
             {
-                var message = new Client_Response
+                var message = new Client_Response<object>
                 {
                     Success = true,
                 };
@@ -93,7 +93,7 @@ namespace Tickets_selling_App.Controllers
             }
             else
             {
-                var message = new Client_Response
+                var message = new Client_Response<object>
                 {
                     Success = false,
                 };
@@ -111,14 +111,14 @@ namespace Tickets_selling_App.Controllers
                     bool response = _User.userRegistration(user);
                     if (response)
                     {
-                        var successMessage = new Client_Response
+                        var successMessage = new Client_Response<object>
                         {
                             Message = "You successfully registered!",
                             Success = true,
                         };
                         return Ok(successMessage);
                     }
-                    var failMessage = new Client_Response
+                    var failMessage = new Client_Response<object>
                     {
                         Message = "something went wrong!",
                         Success = false,
@@ -127,7 +127,7 @@ namespace Tickets_selling_App.Controllers
                 }
                 else
                 {
-                    var failMessage = new Client_Response
+                    var failMessage = new Client_Response<object>
                     {
                         Message = "can't register User!",
                         Success = false,
@@ -148,7 +148,7 @@ namespace Tickets_selling_App.Controllers
             if (User_credentials != null)
             {
                 string token = _User.CreateToken(User_credentials);
-                var ReturToken = new Client_Response
+                var ReturToken = new Client_Response<object>
                 {
                     Message = token,
                     Success = true
@@ -157,7 +157,7 @@ namespace Tickets_selling_App.Controllers
             }
             else
             {
-                var incorrect = new Client_Response
+                var incorrect = new Client_Response<object>
                 {
                     Message = "Email or Password is incorrect!",
                 };
@@ -227,7 +227,7 @@ namespace Tickets_selling_App.Controllers
         {
             if (request.TicketId <= 0)
             {
-                return BadRequest(new Client_Response
+                return BadRequest(new Client_Response<object>
                 {
                     Message = "Invalid ticket ID."
                 });
@@ -243,21 +243,23 @@ namespace Tickets_selling_App.Controllers
 
                     if (success)
                     {
-                        return Ok(new Client_Response
+                        return Ok(new Client_Response<object>
                         {
-                            Message = "You bought the ticket successfully."
-                        });
+                            Message = "You bought the ticket successfully.",
+                            Success =true,
+                        });;
                     }
                     else
                     {
-                        return BadRequest(new Client_Response
+                        return BadRequest(new Client_Response<object>
                         {
-                            Message = "Something went wrong!"
+                            Success =true,
+                            Message = "Something went wrong!",
                         });
                     }
                 }
 
-                return BadRequest(new Client_Response
+                return BadRequest(new Client_Response<object>
                 {
                     Message = $"Only {ticket?.TicketCount ?? 0} tickets are left!"
                 });
