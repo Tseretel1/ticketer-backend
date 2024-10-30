@@ -23,37 +23,31 @@ namespace Tickets_selling_App.Services
         }
 
         //Registration____login   
-        public bool register_as_creator(int userid, RegisterAsCreatorDTO cred)
+        public User register_as_creator(int userid, RegisterAsCreatorDTO cred)
         {
-            bool happens = false;
             var user = _context.User.FirstOrDefault(x => x.ID == userid);
-
             if (user != null)
             {
                 if (cred.IdCardPhoto != null && cred.PhoneNumber != null && cred.PersonalID != null)
                 {
+                    user.Name= cred.Name;
+                    user.LastName = cred.Lastname;
                     user.PersonalID = cred.PersonalID;
                     user.PhoneNumber = cred.PhoneNumber;
                     user.IdCardPhoto = cred.IdCardPhoto;
+                    user.Role = "Creator";
                     _context.SaveChanges();
-                    happens = true;
+                    return user;
                 }
-                if (happens)
-                {
-                    var alreadyRegistered = _context.CreatorValidation.FirstOrDefault(x=>x.ID == userid);
-                    if (alreadyRegistered != null)
-                    {
-                        var CreatorValidation = new CreatorValidation()
-                        {
-                            Userid = userid,
-                            Verified = false,
-                        };
-
-                        _context.CreatorValidation.Add(CreatorValidation);
-                        _context.SaveChanges();
-                        return true;
-                    }
-                }
+            }
+            return null;
+        }
+        public bool accountCreated(int userid)
+        {
+            var accountExists = _context.CreatorAccount.FirstOrDefault(x => x.CreatorID == userid);
+            if(accountExists != null)
+            {
+                return true;
             }
             return false;
         }
@@ -64,8 +58,7 @@ namespace Tickets_selling_App.Services
                 var creator = _context.User.FirstOrDefault(x => x.ID == userid);
                 if (creator != null)
                 {
-                    var accountExists = _context.CreatorAccount
-                        .FirstOrDefault(x => x.UserName == accName && x.CreatorID == userid);
+                    var accountExists = _context.CreatorAccount .FirstOrDefault(x=> x.CreatorID == userid);
 
                     if (accountExists == null)
                     {

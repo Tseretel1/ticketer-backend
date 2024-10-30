@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tickets_selling_App;
 
@@ -11,9 +12,11 @@ using Tickets_selling_App;
 namespace Tickets_selling_App.Migrations
 {
     [DbContext(typeof(Tkt_Dbcontext))]
-    partial class Tkt_DbcontextModelSnapshot : ModelSnapshot
+    [Migration("20241025183111_changed id card photo long to type string.")]
+    partial class changedidcardphotolongtotypestring
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -210,11 +213,11 @@ namespace Tickets_selling_App.Migrations
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PersonalID")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long?>("PersonalID")
+                        .HasColumnType("bigint");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long?>("PhoneNumber")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Role")
                         .IsRequired()

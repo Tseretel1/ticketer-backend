@@ -8,8 +8,6 @@ namespace Tickets_selling_App.Interfaces
     public interface UserInterface
     {
         ICollection<UsersDTO> AllCustomers();
-        string Password_Restoration(string mail);
-        string Changing_Password(string mail, string password,int passcode);
         bool EmailValidation(string Email);
         bool passcodeConfirmation(RegistrationDTO user);
         public bool userRegistration(RegistrationDTO user);

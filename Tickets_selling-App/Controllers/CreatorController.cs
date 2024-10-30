@@ -1,16 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.EntityFrameworkCore.SqlServer.Update.Internal;
-using System.Reflection.Metadata;
-using System.Text;
+using Newtonsoft.Json.Linq;
 using Tickets_selling_App.Dtos.Creator;
-using Tickets_selling_App.Dtos.Ticket;
 using Tickets_selling_App.Dtos.TicketDTO;
 using Tickets_selling_App.Interfaces;
-using Tickets_selling_App.Models;
 using Tickets_selling_App.User_Side_Response;
-using static Tickets_selling_App.Controllers.CreatorController;
 
 namespace Tickets_selling_App.Controllers
 {
@@ -19,24 +13,24 @@ namespace Tickets_selling_App.Controllers
     public class CreatorController : Controller
     {
         private readonly CreatorInterface _creator;
-        public CreatorController(CreatorInterface admin)
+        private readonly UserInterface _user;
+        public CreatorController(CreatorInterface admin, UserInterface user)
         {
             _creator = admin;
+            _user = user;   
         }
-
-        [HttpPost("/register-as-creator")]
-        [Authorize(Policy = "UserOnly")]
-        public IActionResult register_as_Creator(RegisterAsCreatorDTO cred)
+        [HttpGet("/account-created")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult alreadyHaveAccount()
         {
             try
             {
                 var userId = User.FindFirst("UserID")?.Value;
-                var register = _creator.register_as_creator(Convert.ToInt32(userId), cred);
-                if (register)
+                var account = _creator.accountCreated(Convert.ToInt32(userId));
+                if (account)
                 {
                     var message = new Client_Response<object>
                     {
-                        Message = "Admin will check and verify you!",
                         Success = true,
                     };
                     return Ok(message);
@@ -45,12 +39,47 @@ namespace Tickets_selling_App.Controllers
                 {
                     var message = new Client_Response<object>
                     {
-                        Message = "You are already registered, wait for admin to verify you!",
                         Success = false,
                     };
                     return Ok(message);
                 }
-            } catch (Exception ex)
+                return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("/register-as-creator")]
+        [Authorize(Policy = "UserOnly")]
+        public IActionResult register_as_Creator(RegisterAsCreatorDTO cred)
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var user = _creator.register_as_creator(Convert.ToInt32(userId), cred);
+                if (user!=null)
+                {
+                    var token = _user.CreateToken(user);
+                    var message = new Client_Response<object>
+                    {
+                        Message = token,
+                        Success = true,
+                    };
+                    return Ok(message);
+                }
+                else
+                {
+                    var message = new Client_Response<object>
+                    {
+                        Message = "Something went wrong",
+                        Success = false,
+                    };
+                    return Ok(message);
+                }
+            }
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }

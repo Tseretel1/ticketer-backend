@@ -8,7 +8,7 @@
         public string Profile { get; set; }
         public string Email { get; set; }   
         public string AccountRole { get; set; }
-        public long? phoneNumber { get; set; }
-        public long? PersonalID { get; set; }
+        public string? phoneNumber { get; set; }
+        public string? PersonalID { get; set; }
     }
 }

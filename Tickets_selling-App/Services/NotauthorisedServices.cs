@@ -37,7 +37,7 @@ namespace Tickets_selling_App.Services
                         };
             var topTickets = query
                                 .OrderByDescending(t => t.sold)
-                                .Take(10)
+                                .Take(20)
                                 .ToList();
             return topTickets;
         }

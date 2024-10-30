@@ -32,7 +32,8 @@ namespace Tickets_selling_App.Interfaces
 
 
         //Regitser Login
-        bool register_as_creator(int userid,RegisterAsCreatorDTO cred);
+        public bool accountCreated(int userid);
+        User register_as_creator(int userid, RegisterAsCreatorDTO cred);
         bool Creator_Account_Register(string accName, int userid);
         string Creator_Account_Login(int accountid,int userid);
         public ICollection<CreatorAccount> myCreatorAccounts(int userId);

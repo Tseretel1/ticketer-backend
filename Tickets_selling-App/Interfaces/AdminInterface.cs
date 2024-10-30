@@ -6,7 +6,5 @@ namespace Tickets_selling_App.Interfaces
 {
     public interface AdminInterface
     {
-        string AddTicket(CreateTicketDto ticket,int id);
-        void DeleteTicket (int TicketId);
     }
 }

@@ -14,45 +14,5 @@ namespace Tickets_selling_App.Services
         {
             _context = context;
         }
-        public string AddTicket(CreateTicketDto ticket, int id)
-        {
-            string response = "";
-            try
-            {
-                if (ticket != null && ticket.Activation_Date < ticket.Expiration_Date)
-                {
-                    var newTicket = new Ticket
-                    {
-                        Title = ticket.Title,
-                        Description = ticket.Description,
-                        Price = ticket.Price,
-                        Activation_Date = ticket.Activation_Date,
-                        Expiration_Date = ticket.Expiration_Date,
-                        Genre = ticket.Genre,
-                        Photo = ticket.Photo,
-                        PublisherID = id,
-                        ViewCount = 0,
-                    };
-
-                    _context.Tickets.Add(newTicket);
-                    _context.SaveChanges();
-                    response = "Tickets have been added successfully";
-                }
-            }
-            catch (Exception ex)
-            {
-                response = "Catch: " + ex.Message;
-            }
-            return response;
-        }
-        public void DeleteTicket(int TicketId)
-        {
-            var TicketToDelete = _context.Tickets.FirstOrDefault(x=>x.ID == TicketId);
-            if (TicketToDelete != null)
-            {
-                _context.Tickets.Remove(TicketToDelete);
-                _context.SaveChanges();
-            }
-        }
     }
 }

@@ -43,92 +43,6 @@ namespace Tickets_selling_App.Services
             return UserToReturn;
         }
 
-        public string Password_Restoration(string mail)
-        {
-            string response = "";
-            try
-            {
-                var UserValid = _context.User.FirstOrDefault(x => x.Email == mail);
-
-                if (UserValid != null)
-                {
-                    Random random = new Random();
-                    int passcode = random.Next(100000, 999999);
-                    if (_gmail != null)
-                    {
-                        _gmail.Password_Restoration(mail, passcode);
-                    }
-                    else
-                    {
-                        throw new NullReferenceException("_gmail is null. Cannot send email.");
-                    }
-                    var PassChange = _context.PasswordReset.FirstOrDefault(x => x.UserID == UserValid.ID);
-                    if (PassChange != null)
-                    {
-                        PassChange.Passcode = passcode;
-                        PassChange.Expiration = DateTime.Now.AddMinutes(1);
-                    }
-                    else
-                    {
-                        var PasscodeUpdate = new PasswordReset()
-                        {
-                            UserID = UserValid.ID,
-                            Passcode = passcode,
-                            Expiration = DateTime.Now.AddMinutes(1),
-                        };
-                        _context.PasswordReset.Add(PasscodeUpdate);
-                    }
-
-                    _context.SaveChanges();
-
-                    response = "Passcode has been sent to your Gmail";
-                }
-                else
-                {
-                    response = "Could Not Find Mail";
-                }
-            }
-            catch (Exception ex)
-            {
-                response = "An error occurred while processing your request.";
-                throw;
-            }
-            return response;
-        }
-
-        public string Changing_Password(string mail, string password, int passcode)
-        {
-            string response = "";
-
-            var user = _context.User.FirstOrDefault(x => x.Email == mail);
-            if (user != null)
-            {
-                var PassCode_Compare = _context.PasswordReset.FirstOrDefault(x => x.ID == user.ID);
-                if (PassCode_Compare != null && PassCode_Compare.Expiration >= DateTime.Now)
-                {
-                    if (passcode == PassCode_Compare.Passcode)
-                    {
-                        user.Password = password;
-                        PassCode_Compare.Expiration = DateTime.Now;
-                        _context.SaveChanges();
-                        response = $"Your Password has changed to {password}";
-                    }
-                    else
-                    {
-                        response = "Passcode is incorrect";
-                    }
-                }
-                else
-                {
-                    response = "Passcode expired try again";
-                }
-            }
-            else
-            {
-                response = "Could Not find Mail";
-            }
-            return response;
-        }
         //Email validation----------------------------------------------
         public bool EmailValidation(string Email)
         {
@@ -146,7 +60,9 @@ namespace Tickets_selling_App.Services
                  {
                      NewEmailOrNot.Passcode = passcode;
                      NewEmailOrNot.Expiration = DateTime.Now.AddMinutes(5);
-                     _context.SaveChanges();
+                    _gmail.Email_Validation(Email, passcode);
+
+                    _context.SaveChanges();
                  }
                  else
                  {
@@ -265,6 +181,7 @@ namespace Tickets_selling_App.Services
                 {
                     Name = user.Name,
                     LastName = user.LastName,
+                    Email = user.Email,
                 };
 
                 return Profile;

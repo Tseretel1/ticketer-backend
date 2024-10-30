@@ -21,18 +21,7 @@ namespace Tickets_selling_App.Controllers
             _context = tkt_Dbcontext;
         }
 
-        [HttpPost("/reset password")]
-        public async Task<ActionResult> Reset_Password(string Mail)
-        {
-            string Response = _User.Password_Restoration(Mail);
-            return Ok(Response);
-        }
-        [HttpPost("/Change password")]
-        public async Task<ActionResult> Change_Password(string Mail,string password,int passcode)
-        {
-            string Response = _User.Changing_Password(Mail, password, passcode);
-            return Ok(Response);
-        }
+      
         [HttpGet("/user-profile")]
         [Authorize(Policy = "EveryRole2")]
         public IActionResult MyProfile()
