@@ -304,7 +304,7 @@ namespace Tickets_selling_App.Services
               ticket.TicketCount = ticket.TicketCount - ticketCount;
               _context.SoldTickets.AddRange(soldTickets);
               _context.SaveChanges();
-             
+              _gmail.TicketBought(user.Email, ticketCount, ticket);
               return true;
         }
     }
