@@ -14,7 +14,8 @@ namespace Tickets_selling_App.Interfaces
 
         string CreateToken(User user);
         User Login(LoginDto user);
-        object Profile(int userid);
+        UsersDTO Profile(int userid);
+        bool updateUser(int userID, UpdateUserDTO u);
         ICollection<GetTicketDto> activeTickets(int UserID);
         ICollection<GetTicketDto> expiredTickets(int UserID);
         IEnumerable<SoldTicketDto> GetMyTicketInstances(int UserID, int ticketid);

@@ -27,6 +27,8 @@ namespace Tickets_selling_App.Interfaces
 
         bool editProfileName(int accountId, string name);
         ICollection<AccountManagment> GetManagement(int AccountID);
+        public ICollection<User> searchModerators(string email);
+        public bool AddModerators(int userID, int accountID);
         bool RemoveUser(int userid);
 
 
@@ -37,10 +39,7 @@ namespace Tickets_selling_App.Interfaces
         bool Creator_Account_Register(string accName, int userid);
         string Creator_Account_Login(int accountid,int userid);
         public ICollection<CreatorAccount> myCreatorAccounts(int userId);
-
         CreatorAccount createdAccountCredentials(string accName, int creatorid);
-        List<Ticket> MostViewed(int id);
-
 
 
         //Qr scanner

@@ -228,7 +228,7 @@ namespace Tickets_selling_App.Controllers
         }
 
         [HttpPut("edit-profile-photo")]
-        [Authorize(Policy = "EveryRole")]
+        [Authorize(Policy = "CreatorOnly")]
         public IActionResult editProfilePhoto([FromBody] UpdateProfilePhoto request)
         {
             if (string.IsNullOrWhiteSpace(request.Photo))
@@ -258,7 +258,7 @@ namespace Tickets_selling_App.Controllers
             public string Name { get; set; }
         }
         [HttpPut("edit-profile-name")]
-        [Authorize(Policy = "EveryRole")]
+        [Authorize(Policy = "CreatorOnly")]
         public IActionResult editProfileName([FromBody] UpdateProfileRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
@@ -283,7 +283,7 @@ namespace Tickets_selling_App.Controllers
 
 
         [HttpGet("account-management")]
-        [Authorize(Policy = "CreatorOnly")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult AccountManagment()
         {
             var AccountID = User.FindFirst("AccountID")?.Value;
@@ -297,7 +297,7 @@ namespace Tickets_selling_App.Controllers
 
 
         [HttpDelete("remove-user-from-account/{userid}")]
-        [Authorize(Policy = "AccountAdminOnly")]
+        [Authorize(Policy = "CreatorOnly")]
         public IActionResult RemoveUser(int userid)
         {
             var MyTickets = _creator.RemoveUser(userid);
@@ -420,21 +420,6 @@ namespace Tickets_selling_App.Controllers
                 return BadRequest("Something went wrong! " + ex.Message);
             }
         }
-
-
-        [HttpGet("most-viewed-tickets")]
-        public IActionResult MostViewed(int id)
-        {
-            var tickets = _creator.MostViewed(id);
-            if(tickets != null)
-            {
-                return Ok(tickets);
-            }
-            return Ok();
-        }
-
-
-
 
         //Qr code Services 
         [HttpGet("scann-ticket/{ticketId}")]

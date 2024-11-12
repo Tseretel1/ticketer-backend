@@ -337,7 +337,7 @@ namespace Tickets_selling_App.Services
             var account = _context.CreatorAccount.FirstOrDefault(x => x.Id == accountId);
             if (account == null)
             {
-                return new List<AccountManagment>();
+                return null;
             }
 
             var accountRoles = _context.AccountRoles.Where(x => x.AccountID == accountId).ToList();
@@ -361,6 +361,7 @@ namespace Tickets_selling_App.Services
                         UserID = user.ID,
                         phoneNumber = user.PhoneNumber,
                         PersonalID = user.PersonalID,
+                        Photo = user.Photo,
                     };
                     managementList.Add(accountManagement);
                 }
@@ -505,23 +506,33 @@ namespace Tickets_selling_App.Services
 
 
 
-        //Managment services
-        public List<Ticket> MostViewed(int id)
+        //Management services
+        public ICollection<User> searchModerators(string email)
         {
-            List<Ticket> MostViewedTickets = new List<Ticket>();
-            var tickets = _context.Tickets.Where(x => x.PublisherID == id).ToList();
-
-            if (tickets != null && tickets.Any())
+            var query = _context.User.Where(x => x.Email.Contains(email));
+            if (query != null)
             {
-                MostViewedTickets = tickets
-                    .OrderByDescending(t => t.ViewCount)
-                    .Take(5)
-                    .ToList();
-                return MostViewedTickets;
+                return query.ToList();
             }
             return null;
         }
-
+        public bool AddModerators(int userID, int accountID)
+        {
+            var addUser = _context.AccountRoles.FirstOrDefault(x => x.UserID == userID && x.AccountID == accountID);
+            if(addUser == null) 
+            {
+                var accountroles = new CreatorAccountRoles
+                {
+                    AccountID = accountID,
+                    UserID = userID,
+                    Role = "Moderator",
+                };
+                _context.AccountRoles.Add(accountroles);
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
+        }
 
 
 
@@ -564,6 +575,7 @@ namespace Tickets_selling_App.Services
             }
             return null;
         }
+
         public Client_Response<ScanedTicketDTO> oneTimeScann(string ticketid,int accountid)
         {
             var FoundTicket = _context.SoldTickets.FirstOrDefault(x => x.UniqueTicketID == ticketid);

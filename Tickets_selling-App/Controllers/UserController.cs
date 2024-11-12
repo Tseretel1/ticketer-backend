@@ -23,7 +23,7 @@ namespace Tickets_selling_App.Controllers
 
       
         [HttpGet("/user-profile")]
-        [Authorize(Policy = "EveryRole2")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult MyProfile()
         {
             try
@@ -33,6 +33,26 @@ namespace Tickets_selling_App.Controllers
                 if (Customer == null)
                     return NotFound("User not Found");
                 return Ok(Customer);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Something went wrong {ex.Message}");
+            }
+        }
+
+        [HttpPut("/edit-profile")]
+        [Authorize(Policy = "EveryRole")]
+        public IActionResult editUser(UpdateUserDTO user)
+        {
+            try
+            {
+                var userId = User.FindFirst("UserID")?.Value;
+                var Customer = _User.updateUser(Convert.ToInt32(userId), user);
+                if (Customer)
+                {
+                    return Ok(Customer);
+                }
+                return NotFound("User not Found");
             }
             catch (Exception ex)
             {
@@ -156,7 +176,7 @@ namespace Tickets_selling_App.Controllers
 
         //my Ticket 
         [HttpGet("/my-active-tickets")]
-        [Authorize(Policy = "EveryRole2")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult MyctiveTikets()
         {
             try
@@ -171,7 +191,7 @@ namespace Tickets_selling_App.Controllers
             }
         }
         [HttpGet("/my-expired-tickets")]
-        [Authorize(Policy = "EveryRole2")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult MyExpiredTikets()
         {
             try
@@ -186,7 +206,7 @@ namespace Tickets_selling_App.Controllers
             }
         }
         [HttpGet("/my-tickets-instances/{id}")]
-        [Authorize(Policy = "EveryRole2")]
+        [Authorize(Policy = "EveryRole")]
 
         public IActionResult MyTiketInstances([FromRoute] int id)
         {
@@ -211,7 +231,7 @@ namespace Tickets_selling_App.Controllers
             public int TicketCount { get; set; }
         }
         [HttpPost("/buy-ticket")]
-        [Authorize(Policy = "EveryRole2")]
+        [Authorize(Policy = "EveryRole")]
         public IActionResult BuyTicket([FromBody] BuyTicketRequest request)
         {
             if (request.TicketId <= 0)

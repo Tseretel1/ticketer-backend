@@ -172,21 +172,39 @@ namespace Tickets_selling_App.Services
             return tokenHandler.WriteToken(token);
         }
 
-        public object Profile(int userid)
+        public UsersDTO Profile(int userid)
         {
             var user = _context.User.FirstOrDefault(x => x.ID == userid);
             if (user != null)
             {
-                var Profile = new
+                var userDro = new UsersDTO
                 {
-                    Name = user.Name,
-                    LastName = user.LastName,
                     Email = user.Email,
+                    LastName = user.LastName,
+                    Name = user.Name,
+                    photo = user.Photo,
                 };
-
-                return Profile;
+                return userDro;
             }
             return null;
+        }
+
+        public bool updateUser(int userID, UpdateUserDTO u)
+        {
+            var user = _context.User.FirstOrDefault(x=>x.ID == userID); 
+            if(user != null)
+            {
+                user.Name = u.Name;
+                user.LastName = u.lastName;
+                if(u.photo != null)
+                {
+                    user.Photo = u.photo;
+                    _context.SaveChanges();
+                }
+                _context.SaveChanges();
+                return true;
+            }
+            return false;
         }
 
         public ICollection<GetTicketDto> activeTickets(int UserID)
